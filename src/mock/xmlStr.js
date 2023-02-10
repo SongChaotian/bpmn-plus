@@ -30,9 +30,23 @@ export var xmlStr = `
 
     <receiveTask id="Activity_133z9tq" name="Receive Task" />
 
-    <sendTask id="send20230204" name="世界杯八强" Team1="阿根廷" Team2="法国" Team3="克罗地亚" Team4="摩洛哥" Team5="荷兰" Team6="英格兰" Team7="巴西" Team8="葡萄牙" />
+    <sendTask id="send20230204" name="世界杯八强" Team1="阿根廷" Team2="法国" Team3="克罗地亚" Team4="摩洛哥" Team5="荷兰" Team6="英格兰" Team7="巴西" Team8="葡萄牙">
+        <mrfields:mrfield_list mrfield1_name="group1" mrfield2_name="group2" mrfield3_name="group3" mrfield4_name="group4">   
+          <mrfields:mrfield1 Team1="阿根廷" Team2="法国" /> 
+          <mrfields:mrfield2 Team3="克罗地亚" Team4="摩洛哥"/> 
+          <mrfields:mrfield3 Team5="荷兰" Team6="英格兰"/> 
+          <mrfields:mrfield4 Team7="巴西" Team8="葡萄牙"/> 
+        </mrfields:mrfield_list>
+    </sendTask>
 
-    <receiveTask id="rec20230204" name="世界杯四强"  Team2="法国" Team3="克罗地亚" Team4="摩洛哥"/>
+
+    <receiveTask id="rec20230204" name="世界杯四强" Team1="阿根廷" Team2="法国" Team3="克罗地亚" Team4="摩洛哥">
+      <mrfields:mrfield_list mrfield1_name="group1" mrfield2_name="group2" mrfield3_name="group3">   
+        <mrfields:mrfield1 Team1="阿根廷" Team2="法国" /> 
+        <mrfields:mrfield2 Team3="克罗地亚" Team4="摩洛哥"/> 
+        <mrfields:mrfield3 Team2="法国" Team3="克罗地亚"/> 
+      </mrfields:mrfield_list>
+    </receiveTask>
 
     <sendTask id="Activity_15avj39" name="并行多实例">
         <multiInstanceLoopCharacteristics />

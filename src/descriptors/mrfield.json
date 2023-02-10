@@ -1,0 +1,83 @@
+{
+  "name": "MRField_dict",
+  "prefix": "mrfields",
+  "uri": "http://mrfields",
+  "xml": {
+    "tagAlias": "lowerCase"
+  },
+  "associations": [],
+  "types": [
+    {
+      "name": "MRField_dict",
+      "extends": [
+        "bpmn:Task"
+      ],
+      "properties": [
+        {
+          "name": "mrfield_list",
+          "type": "MRField_item_list",
+          "isAttr": false
+        }
+      ]
+    },
+    {
+      "name": "MRField_item_list",
+      "properties": [
+        {
+          "name": "mrfield1",
+          "type": "MRField_item",
+          "isAttr": false
+        },
+        {
+          "name": "mrfield2",
+          "type": "MRField_item",
+          "isAttr": false
+        },
+        {
+          "name": "mrfield3",
+          "type": "MRField_item",
+          "isAttr": false
+        },
+        {
+          "name": "mrfield4",
+          "type": "MRField_item",
+          "isAttr": false
+        },
+        {
+          "name": "mrfield5",
+          "type": "MRField_item",
+          "isAttr": false
+        },
+        {
+          "name": "mrfield6",
+          "type": "MRField_item",
+          "isAttr": false
+        },
+        {
+          "name": "mrfield7",
+          "type": "MRField_item",
+          "isAttr": false
+        },
+        {
+          "name": "mrfield8",
+          "type": "MRField_item",
+          "isAttr": false
+        },
+        {
+          "name": "mrfield9",
+          "type": "MRField_item",
+          "isAttr": false
+        },
+        {
+          "name": "mrfield10",
+          "type": "MRField_item",
+          "isAttr": false
+        }
+      ]
+    },
+    {
+      "name": "MRField_item",
+      "properties": []
+    }
+  ]
+}

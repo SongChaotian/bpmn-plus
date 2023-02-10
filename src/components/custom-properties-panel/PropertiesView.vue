@@ -63,35 +63,51 @@
         <div class="card-body">
           <div class="card-title">
             <label>Add MessageRelation</label>
-            <div class="btn btn-outline-primary btn-sm ms-2">+</div>
+            <div class="btn btn-outline-primary btn-sm ms-2" @click="add_mrfield_group">+</div>
           </div>
 
           <div class="card-text">
-            <div class="row mt-2" v-for="(MRField, key) in MRField_dict" :key="key">
-              <div class="col-7">
-                <input type="text" class="form-control" placeholder="MRField" :value="key" />
+            <div class="row mt-2" v-for="(MRField, groupName) in MRField_dict" :key="groupName">
+              <div class="col-6">
+                <input type="text" class="form-control" placeholder="MRField" :value="groupName"
+                  @change="event => changeField_MRField_GroupName(event, groupName)" />
               </div>
-              <div class="col-2">
-                <div class="btn btn-outline-primary btn-sm">+</div>
-              </div>
-              <div class="col-2">
-                <div class="btn btn-outline-danger btn-sm">×</div>
-              </div>
-
-              <div v-for="(MRField_item, MRField_item_key) in MRField" :key="MRField_item_key">
-                <div class="row">
-                  <div>{{ MRField_item_key }} {{ MRField_item }}</div>
-                  <!-- <div class="btn btn-sm btn-outline-danger">×</div> -->
+              <div class="col-3">
+                <div class="dropdown">
+                  <button type="button" class="btn btn-outline-primary dropdown-toggle btn-sm"
+                    data-bs-toggle="dropdown">
+                    +
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li>
+                      <a class="dropdown-item" href="#"
+                        v-for="(DataFields_dict_value, DataFields_dict_key) in DataFields_dict"
+                        :key="DataFields_dict_key"
+                        @click="add_mrfield_item(groupName, DataFields_dict_key, DataFields_dict_value)">
+                        {{ DataFields_dict_key }}：{{ DataFields_dict_value }}
+                      </a>
+                    </li>
+                  </ul>
                 </div>
+              </div>
+              <div class="col-2">
+                <div class="btn btn-outline-danger btn-sm" @click="delete_mrfield_group(groupName)">×</div>
+              </div>
 
+              <div class="row" v-for="(MRField_item, MRField_item_key) in MRField" :key="MRField_item_key">
+                <div class="col-10">
+                  <p class="h6 small mark" style="float:left">{{ MRField_item_key }}：{{ MRField_item }}</p>
+                </div>
+                <div class="col-1">
+                  <div class="btn btn-outline-danger btn-sm" style="float:left"
+                    @click="delete_mrfield_item(groupName, MRField_item_key)">×
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-
         </div>
       </div>
-
-
     </div>
   </div>
 </template>
@@ -135,19 +151,19 @@ export default {
 
       key_id: 1,
       DataFields_dict: {},
-      MRField_dict: {
-        "MRField1": {
-          "Team1": "阿根廷",
-          "Team2": "法国",
-          "Team5": "中国",
-        },
-        "MRField2": {
-          "Team3": "克罗地亚",
-          "Team4": "摩洛哥",
-        },
-        "MRField3": {},
-      },
-      MRField_id: 1,
+      // MRField_dict: {
+      //   "group1": {
+      //     "Team1": "阿根廷",
+      //     "Team2": "法国",
+      //   },
+      //   "group2": {
+      //     "Team3": "克罗地亚",
+      //     "Team4": "摩洛哥",
+      //   },
+      //   "group3": {},
+      // },
+      MRField_dict: {},
+
     }
   },
   created() {
@@ -198,107 +214,6 @@ export default {
       }
     },
 
-    verifyIsEvent(type) {  // 判断类型是不是event
-      return type.includes('Event')
-    },
-
-    read_expansion_data() {  // 用于读取扩展的数据
-      for (let key in this.DataFields_dict) {  // 清空DataFields
-        delete this.DataFields_dict[key];
-      }
-
-      let DataFields_backup_dict = this.element.businessObject.$attrs;  // 取出当前元素的附加属性
-      for (let key in DataFields_backup_dict) {
-        this.DataFields_dict[key] = DataFields_backup_dict[key];
-      }
-    },
-
-    verifyIsTask(type) {  // 判断类型是不是task
-      if (type.includes('Task')) {
-        this.read_expansion_data();
-        return true;
-      }
-      return false;
-    },
-    verifyIsDataObjectReference(type) {  // 判断类型是不是bpmn:DataObjectReference
-      if (type === "bpmn:DataObjectReference") {
-        this.read_expansion_data();
-        return true;
-      }
-      return false;
-    },
-    verifyIsDataStoreReference(type) {  // 判断类型是不是bpmn:DataStoreReference
-      if (type === "bpmn:DataStoreReference") {
-        this.read_expansion_data();
-        return true;
-      }
-      return false;
-    },
-
-    add_data() {
-      Vue.set(this.DataFields_dict, `Key${this.key_id}`, `Value${this.key_id}`);  // 响应式给对象增加数据，页面也会重新渲染
-      console.log(this.DataFields_dict);
-
-      let key = `Key${this.key_id}`;
-      let value = `Value${this.key_id}`;
-      console.log("增加的key:", key);
-      console.log("增加的value", value);
-      console.log("当前元素", this.element);
-
-      this.element[key] = value;
-      let properties = {}
-      properties[key] = value;
-      this.updateProperties(properties);  // 调用属性更新方法
-      this.key_id++;
-    },
-
-    delete_data(key) {
-      console.log(`删除键为${key}的这条数据:`);
-      Vue.delete(this.DataFields_dict, key);
-      Vue.delete(this.element, key);
-      let properties = {}
-      properties[key] = undefined;
-      this.updateProperties(properties);  // 调用属性更新方法
-    },
-
-    /**
-     * 改变控件触发的事件
-     * @param { Object } input的Event
-     * @param { String } 要修改的属性的名称
-     */
-    changeField(event, type) {
-      console.log("改变输入框引发是事件", event);
-      console.log("要修改的key:", type);
-      console.log("要修改的value", event.target.value);
-      const value = event.target.value;
-      console.log("原本的value", this.element[type]);
-      console.log("当前元素", this.element);
-      this.element[type] = value
-      let properties = {}
-      properties[type] = value
-      if (type === 'color') {
-        this.onChangeColor(value)
-      }
-      this.updateProperties(properties);  // 调用属性更新方法
-    },
-    // 修改key的思路，将value保存下来，先将原old_key、value对删除，再增加一个new_key、value对
-    changeField_key(event, old_key, value) {
-      console.log("改变输入框引发是事件", event);
-      console.log("旧key:", old_key);
-      console.log("新key:", event.target.value);
-      const new_key = event.target.value;
-      console.log("原本的value:", this.element[old_key]);
-      console.log("当前元素:", this.element);
-
-      console.log(`删除键为${old_key}的这条数据:`);
-      Vue.delete(this.DataFields_dict, old_key);
-      Vue.delete(this.element, old_key);
-      this.element[new_key] = value;
-      let properties = {}
-      properties[old_key] = undefined;
-      properties[new_key] = value
-      this.updateProperties(properties);  // 调用属性更新方法
-    },
     updateName(name) {
       const { modeler, element } = this
       const modeling = modeler.get('modeling')
@@ -333,6 +248,319 @@ export default {
       bpmnReplace.replaceElement(element, {
         type: value  // 直接修改type就可以了
       })
+    },
+
+    verifyIsEvent(type) {  // 判断类型是不是event
+      return type.includes('Event')
+    },
+
+    verifyIsTask(type) {  // 判断类型是不是task
+      if (type.includes('Task')) {
+        this.read_expansion_data();  // 读取额外数据
+        this.read_MessageRelation();  // 读取MessageRelation
+        return true;
+      }
+      return false;
+    },
+    verifyIsDataObjectReference(type) {  // 判断类型是不是bpmn:DataObjectReference
+      if (type === "bpmn:DataObjectReference") {
+        this.read_expansion_data();
+        return true;
+      }
+      return false;
+    },
+    verifyIsDataStoreReference(type) {  // 判断类型是不是bpmn:DataStoreReference
+      if (type === "bpmn:DataStoreReference") {
+        this.read_expansion_data();
+        return true;
+      }
+      return false;
+    },
+
+    // 用于读取扩展的数据
+    read_expansion_data() {
+      for (let key in this.DataFields_dict) {  // 清空DataFields
+        delete this.DataFields_dict[key];
+      }
+
+      let DataFields_backup_dict = this.element.businessObject.$attrs;  // 取出当前元素的附加属性
+      for (let key in DataFields_backup_dict) {
+        this.DataFields_dict[key] = DataFields_backup_dict[key];
+      }
+    },
+
+    // 用于读取MessageRelation
+    read_MessageRelation() {
+      for (let key in this.MRField_dict) {  // 清空MRField_dict
+        Vue.delete(this.MRField_dict, key);
+      }
+
+      const businessObject = this.element.businessObject;
+      if (businessObject.mrfield_list) {  // 如果有mrfield_list附加属性的话
+        let mrfield_list = businessObject.mrfield_list.$attrs;  // 获取mrfield_list，里面存放的扩展的MRField组
+        let mrfield_list_item = businessObject.mrfield_list;
+
+        for (let key_i in mrfield_list) {  // 枚举每一个MRField组拿到组名以及组里面的对象
+          let mrfGropuName = mrfield_list[key_i];  // mrfGropuName用户看到的MRField组名
+          let mrfield_Keyname = key_i.split("_")[0];  // mrfield_Keyname存储在businessObject的组名
+          Vue.set(this.MRField_dict, mrfGropuName, {});  // 响应式给对象增加数据，页面也会重新渲染
+
+          for (let key_j in mrfield_list_item[`${mrfield_Keyname}`].$attrs) {
+            let item_val = mrfield_list_item[`${mrfield_Keyname}`].$attrs[key_j]
+            this.MRField_dict[mrfGropuName][key_j] = item_val;
+          }
+        }
+      }
+    },
+
+    // 增加额外数据field
+    add_data() {
+      Vue.set(this.DataFields_dict, `Key${this.key_id}`, `Value${this.key_id}`);  // 响应式给对象增加数据，页面也会重新渲染
+      console.log(this.DataFields_dict);
+
+      let key = `Key${this.key_id}`;
+      let value = `Value${this.key_id}`;
+      console.log("增加的key:", key);
+      console.log("增加的value", value);
+      console.log("当前元素", this.element);
+
+      this.element[key] = value;
+      let properties = {}
+      properties[key] = value;
+      this.updateProperties(properties);  // 调用属性更新方法
+      this.key_id++;
+    },
+
+    // 删除额外数据field
+    delete_data(key) {
+      console.log(`删除键为${key}的这条数据:`);
+      Vue.delete(this.DataFields_dict, key);
+      Vue.delete(this.element, key);
+      let properties = {}
+      properties[key] = undefined;
+      this.updateProperties(properties);  // 调用属性更新方法
+
+      // 如果是Task类型的数据还要更新一下MessageRelation
+      if (this.verifyIsTask(this.element.type)) {
+        this.synchronous_delete_mrfield_item(key);  // 同步更新下面的MessageRelation
+      }
+    },
+
+    // 适用于Task，增加一个MessageRelation的Group
+    add_mrfield_group() {
+      let newGroupItem = 0;
+      console.log("增加一个组");
+      const { modeler, element } = this;
+      const bpmnFactory = modeler.get('bpmnFactory');
+      const businessObject = element.businessObject;
+
+      if (!businessObject.mrfield_list) {  // 如果元素没有MessageRelation的话，给他开个新的
+        let mrfield_list = bpmnFactory.create('mrfields:MRField_item_list', {});
+        businessObject.mrfield_list = mrfield_list;
+      }
+
+      for (let i = 1; i <= 10; i++) {  // 从1-10中找一个数字作为组的num来增加
+        let mrfield_list = businessObject.mrfield_list.$attrs;
+        let sign = true;
+        for (let GroupName_key in mrfield_list) {
+          if (GroupName_key.search(i) != -1) {  // 如果mrfield_list已经有了这个num就枚举下一个数字
+            sign = false;
+            break;
+          }
+        }
+        if (sign) {  // 找到了合适的num就使用
+          newGroupItem = i;
+          break;
+        }
+      }
+
+      let NewMrfieldGroup = bpmnFactory.create('mrfields:MRField_item', {});  // 创建子元素
+      businessObject.mrfield_list[`mrfield${newGroupItem}`] = NewMrfieldGroup;
+      businessObject.mrfield_list.$attrs[`mrfield${newGroupItem}_name`] = `group${newGroupItem}`;
+
+      this.read_MessageRelation();
+    },
+
+    // 适用于Task，删除一个MessageRelation的Group
+    delete_mrfield_group(GroupName) {
+      console.log("删除组的名为：", GroupName);
+
+      const businessObject = this.element.businessObject;
+      let mrfield_list = businessObject.mrfield_list.$attrs;
+      let mrfield_list_item = businessObject.mrfield_list;
+
+      for (let i in mrfield_list) {
+        if (mrfield_list[i] === GroupName) {
+
+          let mrfield_Keyname = i.split("_")[0];
+          console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
+          delete mrfield_list_item[mrfield_Keyname];
+          delete mrfield_list[i];
+          console.log("删除完成");
+        }
+      }
+      this.read_MessageRelation();
+    },
+
+    // 适用于Task，向MessageRelation里的其中一个Group增加一项额外数据item
+    add_mrfield_item(GroupName, newKey, newValue) {
+      console.log("要增加item的组为：", GroupName);
+      console.log("要增加的项目为：", newKey, newValue);
+
+      const businessObject = this.element.businessObject;
+      let mrfield_list = businessObject.mrfield_list.$attrs;
+      let mrfield_list_item = businessObject.mrfield_list;
+
+      for (let i in mrfield_list) {
+        if (mrfield_list[i] === GroupName) {
+          let mrfield_Keyname = i.split("_")[0];
+          console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
+          mrfield_list_item[mrfield_Keyname].$attrs[newKey] = newValue;
+          console.log("增加完成");
+        }
+      }
+      this.read_MessageRelation();
+    },
+
+    // 适用于Task，删除MessageRelation里的其中一个Group的一项额外数据item
+    delete_mrfield_item(GroupName, GroupItem) {
+      console.log("删除项目所在组为：", GroupName);
+      console.log("删除项目的名为：", GroupItem);
+
+      const businessObject = this.element.businessObject;
+      let mrfield_list = businessObject.mrfield_list.$attrs;
+      let mrfield_list_item = businessObject.mrfield_list;
+
+      for (let i in mrfield_list) {
+        if (mrfield_list[i] === GroupName) {
+          let mrfield_Keyname = i.split("_")[0];
+          console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
+          delete mrfield_list_item[mrfield_Keyname].$attrs[GroupItem];
+          console.log("删除完成");
+        }
+      }
+      this.read_MessageRelation();
+    },
+
+    // 适用于Task，当上面的item更新后同步更新MessageRelation里Group里修改的item
+    synchronous_update_mrfield_item(Key, newValue) {
+      const businessObject = this.element.businessObject;
+      let mrfield_list = businessObject.mrfield_list.$attrs;
+      let mrfield_list_item = businessObject.mrfield_list;
+
+      for (let i in mrfield_list) {
+        let mrfield_Keyname = i.split("_")[0];
+        console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
+
+        for (let j in mrfield_list_item[mrfield_Keyname].$attrs) {
+          if (j === Key) {
+            mrfield_list_item[mrfield_Keyname].$attrs[j] = newValue;
+          }
+        }
+      }
+    },
+
+    // 适用于Task，当上面的item的Key更新后同步更新MessageRelation里Group里修改的item
+    synchronous_updateKey_mrfield_item(oldKey, newKey, Value) {
+      const businessObject = this.element.businessObject;
+      let mrfield_list = businessObject.mrfield_list.$attrs;
+      let mrfield_list_item = businessObject.mrfield_list;
+
+      for (let i in mrfield_list) {
+        let mrfield_Keyname = i.split("_")[0];
+        console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
+
+        for (let j in mrfield_list_item[mrfield_Keyname].$attrs) {
+          if (j === oldKey) {
+            delete mrfield_list_item[mrfield_Keyname].$attrs[j];
+            mrfield_list_item[mrfield_Keyname].$attrs[newKey] = Value;
+          }
+        }
+      }
+    },
+
+    // 适用于Task，当上面的item删除后同步删除MessageRelation里Group里修改的item
+    synchronous_delete_mrfield_item(Key) {
+      const businessObject = this.element.businessObject;
+      let mrfield_list = businessObject.mrfield_list.$attrs;
+      let mrfield_list_item = businessObject.mrfield_list;
+
+      for (let i in mrfield_list) {
+        let mrfield_Keyname = i.split("_")[0];
+        console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
+
+        for (let j in mrfield_list_item[mrfield_Keyname].$attrs) {
+          if (j === Key) {
+            delete mrfield_list_item[mrfield_Keyname].$attrs[j];
+          }
+        }
+      }
+    },
+
+
+    /**
+     * 改变控件触发的事件
+     * @param { Object } input的Event
+     * @param { String } 要修改的属性的名称
+     */
+    changeField(event, type) {
+      console.log("改变输入框引发是事件", event);
+      console.log("要修改的key:", type);
+      console.log("要修改的value", event.target.value);
+      const value = event.target.value;
+      console.log("原本的value", this.element[type]);
+      console.log("当前元素", this.element);
+      this.element[type] = value
+      let properties = {}
+      properties[type] = value
+      if (type === 'color') {
+        this.onChangeColor(value)
+      }
+      this.updateProperties(properties);  // 调用属性更新方法
+
+      // 如果是Task类型的数据还要更新一下MessageRelation
+      if (this.verifyIsTask(this.element.type)) {
+        this.synchronous_update_mrfield_item(type, value);  // 同步更新下面的MessageRelation
+      }
+    },
+
+    // 修改key的思路，将value保存下来，先将原old_key、value对删除，再增加一个new_key、value对
+    changeField_key(event, old_key, value) {
+      console.log("改变输入框引发是事件", event);
+      console.log("旧key:", old_key);
+      console.log("新key:", event.target.value);
+      const new_key = event.target.value;
+      console.log("原本的value:", this.element[old_key]);
+      console.log("当前元素:", this.element);
+
+      console.log(`删除键为${old_key}的这条数据:`);
+      Vue.delete(this.DataFields_dict, old_key);
+      Vue.delete(this.element, old_key);
+      this.element[new_key] = value;
+      let properties = {}
+      properties[old_key] = undefined;
+      properties[new_key] = value
+      this.updateProperties(properties);  // 调用属性更新方法
+
+      this.synchronous_updateKey_mrfield_item(old_key, new_key, value);
+    },
+
+    // 修改MessageRelation里的组名
+    changeField_MRField_GroupName(event, key) {
+      console.log("原组名", key);
+      console.log("新组名:", event.target.value);
+
+      let newName = event.target.value;
+      const businessObject = this.element.businessObject;
+      const mrfield_list = businessObject.mrfield_list.$attrs;
+
+      for (let i in mrfield_list) {
+        if (mrfield_list[i] === key) {
+          mrfield_list[i] = newName;
+          console.log("当前的mrfield_Keyname是:", i);
+        }
+      }
+      this.read_MessageRelation();  // 更新MessageRelation
     },
 
     /**
