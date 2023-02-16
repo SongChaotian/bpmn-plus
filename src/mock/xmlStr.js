@@ -48,7 +48,7 @@ export var xmlStr = `
       </mrfields:mrfield_list>
     </receiveTask>
 
-    <sendTask id="Activity_15avj39" name="并行多实例">
+    <sendTask id="Activity_15avj39" name="并行多实例" innum:instancenumber="6">
         <multiInstanceLoopCharacteristics />
     </sendTask>
 
@@ -61,7 +61,7 @@ export var xmlStr = `
         <startEvent id="Event_0p76utx" /> 
     </subProcess>
 
-    <startEvent id="StartEvent_1rzkxhm">
+    <startEvent id="StartEvent_1rzkxhm" name="开始节点">
         <outgoing>SequenceFlow_1gtr5rd</outgoing>
     </startEvent>
     

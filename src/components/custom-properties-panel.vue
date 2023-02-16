@@ -11,7 +11,9 @@
 import BpmnModeler from 'bpmn-js/lib/Modeler';  // 这个用来建模
 import PropertiesView from './custom-properties-panel/PropertiesView';  // 自定义的 右侧属性栏 (框+内容)
 
-import customModdleDescriptor from '../descriptors/mrfield';  // 自定义的右侧扩展属性描述json
+import MRfieldDescriptor from '../descriptors/mrfield';  // 自定义的右侧扩展属性描述json
+import InstanceNumberDescriptor from '../descriptors/InstanceNumber';
+
 import { xmlStr } from '../mock/xmlStr';   // 引入一个本地的xml字符串
 
 
@@ -43,8 +45,9 @@ export default {
       // 建模
       this.bpmnModeler = new BpmnModeler({
         container: canvas,
-        moddleExtensions: {
-          mrfield: customModdleDescriptor    // 自定义的维护属性面板中的属性
+        moddleExtensions: {  // 自定义的维护属性面板中的属性
+          MRfield: MRfieldDescriptor,
+          InstanceNumber: InstanceNumberDescriptor
         }
       });
       this.createNewDiagram();

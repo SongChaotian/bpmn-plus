@@ -11,14 +11,10 @@
         <label>name</label>
         <input class="form-control" :value="element.name" @change="event => changeField(event, 'name')" />
       </fieldset>
-      <fieldset class="element-item">
-        <label>customProps</label>
-        <input class="form-control" :value="element.customProps" @change="event => changeField(event, 'customProps')" />
-      </fieldset>
+
       <fieldset class="element-item form-control-color-item">
         <label>节点颜色</label>
-        <input class="form-control" type="color" :value="element.color"
-          @change="event => changeField(event, 'color')" />
+        <input class="form-control" type="color" :value="element.color" @change="event => onChangeColor(event)" />
       </fieldset>
       <fieldset class="element-item" v-if="isEvent">
         <label>修改event节点类型</label>
@@ -34,25 +30,31 @@
         </select>
       </fieldset>
 
+      <fieldset class="element-item" v-if="isMultiInstance">
+        <label>InstanceNumber</label>
+        <input class="form-control" :value="InstanceNumber ? InstanceNumber : 'None'"
+          @change="event => update_InstanceNuber(event, 'instancenumber')" />
+      </fieldset>
+
       <div class="card mt-2" v-if="isDataStoreReference || isDataObjectReference || isTask">
         <div class="card-body">
           <div class="card-title">
             <label v-if="isDataStoreReference || isDataObjectReference">Add Data Field</label>
             <label v-if="isTask">Add Message Field</label>
-            <div class="btn btn-outline-primary btn-sm ms-2" @click="add_data">+</div>
+            <div class="btn btn-outline-primary btn-sm ms-2" @click="add_expansion_data">+</div>
           </div>
           <div class="card-text">
             <div class="row mt-2" v-for="(value, key) in DataFields_dict" :key="key">
               <div class="col-5">
                 <input type="text" class="form-control" placeholder="key" :value="key"
-                  @change="event => changeField_key(event, key, value)" />
+                  @change="event => update_expansion_data_key(event, key, value)" />
               </div>
               <div class="col-5">
                 <input type="text" class="form-control" placeholder="value" :value="value"
-                  @change="event => changeField(event, key)" />
+                  @change="event => update_expansion_data(event, key)" />
               </div>
               <div class="col-2">
-                <div class="btn btn-sm btn-outline-danger" @click="delete_data(key)">×</div>
+                <div class="btn btn-sm btn-outline-danger" @click="delete_expansion_data(key)">×</div>
               </div>
             </div>
           </div>
@@ -70,7 +72,7 @@
             <div class="row mt-2" v-for="(MRField, groupName) in MRField_dict" :key="groupName">
               <div class="col-6">
                 <input type="text" class="form-control" placeholder="MRField" :value="groupName"
-                  @change="event => changeField_MRField_GroupName(event, groupName)" />
+                  @change="event => update_MRField_GroupName(event, groupName)" />
               </div>
               <div class="col-3">
                 <div class="dropdown">
@@ -115,7 +117,6 @@
 <script>
 import { START_EVENT } from 'bpmn-js/lib/features/replace/ReplaceOptions.js';
 import $ from "jquery";
-import { ref } from 'vue';
 import Vue from 'vue';
 
 export default {
@@ -163,7 +164,7 @@ export default {
       //   "group3": {},
       // },
       MRField_dict: {},
-
+      InstanceNumber: null,
     }
   },
   created() {
@@ -211,19 +212,22 @@ export default {
           this.taskType = type
         }
         element['name'] = name;  // 同步更新图上的label和自定义属性栏的name
+
+        const Style = businessObject.di;  // 获取element的颜色
+        element.color = Style.stroke ? Style.stroke : "#000000";  // 同步更新自定义属性栏的color
       }
     },
-
     updateName(name) {
       const { modeler, element } = this
       const modeling = modeler.get('modeling')
       modeling.updateLabel(element, name)
       // 等同于 modeling.updateProperties(element, { name })
     },
-    onChangeColor(color) {
-      console.log(color)
-      const { modeler, element } = this
-      const modeling = this.modeler.get('modeling')
+    onChangeColor(event) {  // 改变节点颜色
+      const color = event.target.value;
+      console.log(color);
+      const { modeler, element } = this;
+      const modeling = modeler.get('modeling');
       modeling.setColor(element, {
         fill: null,  // 节点的填充色
         stroke: color  // 节点边框的颜色和节点label的颜色
@@ -289,6 +293,67 @@ export default {
       }
     },
 
+    // 增加扩展数据field
+    add_expansion_data() {
+      Vue.set(this.DataFields_dict, `Key${this.key_id}`, `Value${this.key_id}`);  // 响应式给对象增加数据，页面也会重新渲染
+
+      let key = `Key${this.key_id}`;
+      let value = `Value${this.key_id}`;
+      let properties = {}
+      properties[key] = value;
+      this.updateProperties(properties);  // 调用属性更新方法
+      this.key_id++;
+    },
+
+    // 删除扩展数据field
+    delete_expansion_data(key) {
+      console.log(`删除键为${key}的这条数据:`);
+      Vue.delete(this.DataFields_dict, key);
+      let properties = {}
+      properties[key] = undefined;
+      this.updateProperties(properties);  // 调用属性更新方法
+
+      // 如果是Task类型的数据还要更新一下MessageRelation
+      if (this.verifyIsTask(this.element.type)) {
+        this.synchronous_delete_mrfield_item(key);  // 同步更新下面的MessageRelation
+      }
+    },
+
+    // 更新扩展数据field的value
+    update_expansion_data(event, key) {
+      const value = event.target.value;
+      let properties = {}
+      properties[key] = value
+      this.updateProperties(properties);  // 调用属性更新方法
+
+      // 如果是Task类型的数据还要更新一下MessageRelation
+      if (this.verifyIsTask(this.element.type)) {
+        this.synchronous_update_mrfield_item(key, value);  // 同步更新下面的MessageRelation
+      }
+    },
+
+    // 更新扩展数据field的key
+    // 修改key的思路，将value保存下来，先将原old_key、value对删除，再增加一个new_key、value对
+    update_expansion_data_key(event, old_key, value) {
+      console.log("改变输入框引发是事件", event);
+      console.log("旧key:", old_key);
+      console.log("新key:", event.target.value);
+      const new_key = event.target.value;
+      console.log("原本的value:", this.element[old_key]);
+      console.log("当前元素:", this.element);
+
+      console.log(`删除键为${old_key}的这条数据:`);
+      Vue.delete(this.DataFields_dict, old_key);
+      Vue.delete(this.element, old_key);
+      this.element[new_key] = value;
+      let properties = {}
+      properties[old_key] = undefined;
+      properties[new_key] = value
+      this.updateProperties(properties);  // 调用属性更新方法
+
+      this.synchronous_updateKey_mrfield_item(old_key, new_key, value);
+    },
+
     // 用于读取MessageRelation
     read_MessageRelation() {
       for (let key in this.MRField_dict) {  // 清空MRField_dict
@@ -310,39 +375,6 @@ export default {
             this.MRField_dict[mrfGropuName][key_j] = item_val;
           }
         }
-      }
-    },
-
-    // 增加额外数据field
-    add_data() {
-      Vue.set(this.DataFields_dict, `Key${this.key_id}`, `Value${this.key_id}`);  // 响应式给对象增加数据，页面也会重新渲染
-      console.log(this.DataFields_dict);
-
-      let key = `Key${this.key_id}`;
-      let value = `Value${this.key_id}`;
-      console.log("增加的key:", key);
-      console.log("增加的value", value);
-      console.log("当前元素", this.element);
-
-      this.element[key] = value;
-      let properties = {}
-      properties[key] = value;
-      this.updateProperties(properties);  // 调用属性更新方法
-      this.key_id++;
-    },
-
-    // 删除额外数据field
-    delete_data(key) {
-      console.log(`删除键为${key}的这条数据:`);
-      Vue.delete(this.DataFields_dict, key);
-      Vue.delete(this.element, key);
-      let properties = {}
-      properties[key] = undefined;
-      this.updateProperties(properties);  // 调用属性更新方法
-
-      // 如果是Task类型的数据还要更新一下MessageRelation
-      if (this.verifyIsTask(this.element.type)) {
-        this.synchronous_delete_mrfield_item(key);  // 同步更新下面的MessageRelation
       }
     },
 
@@ -497,6 +529,116 @@ export default {
       }
     },
 
+    // 修改MessageRelation里的组名
+    update_MRField_GroupName(event, key) {
+      console.log("原组名", key);
+      console.log("新组名:", event.target.value);
+
+      let newName = event.target.value;
+      const businessObject = this.element.businessObject;
+      const mrfield_list = businessObject.mrfield_list.$attrs;
+
+      for (let i in mrfield_list) {
+        if (mrfield_list[i] === key) {
+          mrfield_list[i] = newName;
+          console.log("当前的mrfield_Keyname是:", i);
+        }
+      }
+      this.read_MessageRelation();  // 更新MessageRelation
+    },
+
+    // 判断当前点击的元素有没有带有多实例标志
+    verifyIsMultiInstance(element) {
+      // 获取多实例特性
+      const loopCharacteristics = element.businessObject.loopCharacteristics;
+
+      // 检查多实例特性是否存在
+      if (!loopCharacteristics) {
+        console.log('该元素没有多实例特性');
+        this.pre_delete_InstanceNumber_label();  // 先删除可能存在的 label 元素
+        delete element.businessObject.instancenumber;
+        return false;
+      }
+
+      // 检查多实例特性的类型是否为 bpmn:MultiInstanceLoopCharacteristics
+      if (loopCharacteristics.$type !== 'bpmn:MultiInstanceLoopCharacteristics') {
+        console.log('该元素的多实例特性类型不正确');
+        this.pre_delete_InstanceNumber_label();  // 先删除可能存在的 label 元素
+        delete element.businessObject.instancenumber;
+        return false;
+      }
+
+      // 检查多实例特性的 isSequential 属性
+      const isSequential = loopCharacteristics.isSequential;
+
+      // 检查多实例特性的 loopCardinality 属性
+      const loopCardinality = loopCharacteristics.loopCardinality;
+
+      console.log('多实例属性', loopCharacteristics);
+      console.log('是否串行执行', isSequential);
+      console.log('循环次数', loopCardinality);
+      this.paint_InstanceNumber();
+
+      return true;
+    },
+
+    // 更新InstanceNuber
+    update_InstanceNuber(event, instancenumber) {
+      const instancenumber_value = event.target.value;
+      let properties = {}
+      properties[instancenumber] = instancenumber_value
+
+      this.updateProperties(properties);  // 调用属性更新方法
+      this.paint_InstanceNumber();  // 将InstanceNumber画出来
+    },
+
+    // 预先删除InstanceNumber_label
+    pre_delete_InstanceNumber_label() {
+      const { modeler, element } = this;
+      const elementRegistry = modeler.get('elementRegistry');
+      const gfx = elementRegistry.getGraphics(element); // 获取元素图形表示
+
+      // 先删除可能存在的 label 元素
+      if (element.InstanceNumber_label) {
+        gfx.removeChild(element.InstanceNumber_label);  // 将画布上先前显示的数字删去
+        delete element.InstanceNumber_label;  // 删掉这个标签
+      }
+    },
+
+    // 将InstanceNumber画出来
+    paint_InstanceNumber() {
+      const { modeler, element } = this;
+      const elementRegistry = modeler.get('elementRegistry');
+      const businessObject = element.businessObject;  // 获取该元素对应的 businessObject
+
+      const InstanceNumber = businessObject.instancenumber;  // 获取要显示的文本
+      this.InstanceNumber = InstanceNumber;
+      const gfx = elementRegistry.getGraphics(element); // 获取元素图形表示
+
+      // 先删除可能存在的 label 元素
+      this.pre_delete_InstanceNumber_label();
+
+      // 创建并设置label元素
+      const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      label.setAttribute('class', 'djs-label');
+      label.setAttribute('text-anchor', 'middle');
+      label.setAttribute('font-size', '18px');
+
+      // 设置label的位置
+      const bbox = gfx.getBBox();
+      const x = bbox.x + bbox.width / 2;
+      const y = bbox.y + bbox.height + 15;
+      label.setAttribute('x', x);
+      label.setAttribute('y', y);
+      label.textContent = InstanceNumber;
+
+      // 添加label元素到元素图形中
+      gfx.appendChild(label);
+
+      // 保存 label 元素
+      element.InstanceNumber_label = label;
+    },
+
 
     /**
      * 改变控件触发的事件
@@ -513,54 +655,8 @@ export default {
       this.element[type] = value
       let properties = {}
       properties[type] = value
-      if (type === 'color') {
-        this.onChangeColor(value)
-      }
+
       this.updateProperties(properties);  // 调用属性更新方法
-
-      // 如果是Task类型的数据还要更新一下MessageRelation
-      if (this.verifyIsTask(this.element.type)) {
-        this.synchronous_update_mrfield_item(type, value);  // 同步更新下面的MessageRelation
-      }
-    },
-
-    // 修改key的思路，将value保存下来，先将原old_key、value对删除，再增加一个new_key、value对
-    changeField_key(event, old_key, value) {
-      console.log("改变输入框引发是事件", event);
-      console.log("旧key:", old_key);
-      console.log("新key:", event.target.value);
-      const new_key = event.target.value;
-      console.log("原本的value:", this.element[old_key]);
-      console.log("当前元素:", this.element);
-
-      console.log(`删除键为${old_key}的这条数据:`);
-      Vue.delete(this.DataFields_dict, old_key);
-      Vue.delete(this.element, old_key);
-      this.element[new_key] = value;
-      let properties = {}
-      properties[old_key] = undefined;
-      properties[new_key] = value
-      this.updateProperties(properties);  // 调用属性更新方法
-
-      this.synchronous_updateKey_mrfield_item(old_key, new_key, value);
-    },
-
-    // 修改MessageRelation里的组名
-    changeField_MRField_GroupName(event, key) {
-      console.log("原组名", key);
-      console.log("新组名:", event.target.value);
-
-      let newName = event.target.value;
-      const businessObject = this.element.businessObject;
-      const mrfield_list = businessObject.mrfield_list.$attrs;
-
-      for (let i in mrfield_list) {
-        if (mrfield_list[i] === key) {
-          mrfield_list[i] = newName;
-          console.log("当前的mrfield_Keyname是:", i);
-        }
-      }
-      this.read_MessageRelation();  // 更新MessageRelation
     },
 
     /**
@@ -591,6 +687,10 @@ export default {
       const { element } = this;
       return this.verifyIsDataStoreReference(element.type)
     },
+    isMultiInstance() {  // 判断当前点击的元素有没有带有多实例标志
+      const { element } = this;
+      return this.verifyIsMultiInstance(element)
+    }
   }
 }
 </script>
