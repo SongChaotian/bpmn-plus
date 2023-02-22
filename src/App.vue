@@ -22,8 +22,7 @@ export default {
     return {
       links: [
         { to: '/basic', title: '基本使用' },
-        { to: '/custom-properties-panel', title: '宋超田专属' },
-        { to: '/test', title: 'test' }
+        { to: '/custom-properties-panel', title: '宋超田专属' }
       ]
     }
   }

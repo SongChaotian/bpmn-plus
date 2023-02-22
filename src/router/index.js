@@ -10,11 +10,6 @@ const routes = [{
     path: '/custom-properties-panel',
     component: () =>
         import('./../components/custom-properties-panel')
-},
-{
-    path: '/test',
-    component: () =>
-        import('./../components/test')
 }]
 
 export default new Router({

@@ -33,7 +33,25 @@
       <fieldset class="element-item" v-if="isMultiInstance">
         <label>InstanceNumber</label>
         <input class="form-control" :value="InstanceNumber ? InstanceNumber : 'None'"
-          @change="event => update_InstanceNuber(event, 'instancenumber')" />
+          @change="event => update_InstanceNuber(event, 'InstanceNumber')" />
+      </fieldset>
+
+      <fieldset class="element-item" v-if="isMultiInstance">
+        <label>EndCondition</label>
+        <select class="form-select" @change="changeEndConditionType" :value="EndConditionType">
+          <option v-for="option in EndConditionTypes" :key="option.value" :value="option.value">{{ option.label }}
+          </option>
+        </select>
+        <fieldset class="element-item mt-2" v-if="EndConditionType === 'MessageNum' || EndConditionType === 'Race'">
+          <label>ConditionNum</label>
+          <input class="form-control" :value="ConditionNum ? ConditionNum : InstanceNumber"
+            @change="event => update_ConditionNum(event, 'ConditionNum')" />
+        </fieldset>
+        <fieldset class="element-item mt-2" v-if="EndConditionType === 'Time' || EndConditionType === 'Race'">
+          <label>ConditionTime</label>
+          <input class="form-control" :value="ConditionTime"
+            @change="event => update_ConditionTime(event, 'ConditionTime')" />
+        </fieldset>
       </fieldset>
 
       <div class="card mt-2" v-if="isDataStoreReference || isDataObjectReference || isTask">
@@ -76,15 +94,13 @@
               </div>
               <div class="col-3">
                 <div class="dropdown">
-                  <button type="button" class="btn btn-outline-primary dropdown-toggle btn-sm"
-                    data-bs-toggle="dropdown">
+                  <button type="button" class="btn btn-outline-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown">
                     +
                   </button>
                   <ul class="dropdown-menu">
                     <li>
                       <a class="dropdown-item" href="#"
-                        v-for="(DataFields_dict_value, DataFields_dict_key) in DataFields_dict"
-                        :key="DataFields_dict_key"
+                        v-for="(DataFields_dict_value, DataFields_dict_key) in DataFields_dict" :key="DataFields_dict_key"
                         @click="add_mrfield_item(groupName, DataFields_dict_key, DataFields_dict_value)">
                         {{ DataFields_dict_key }}：{{ DataFields_dict_value }}
                       </a>
@@ -118,6 +134,11 @@
 import { START_EVENT } from 'bpmn-js/lib/features/replace/ReplaceOptions.js';
 import $ from "jquery";
 import Vue from 'vue';
+import {
+  append as svgAppend,
+  create as svgCreate,
+  classes as svgClasses
+} from 'tiny-svg'
 
 export default {
   name: 'PropertiesView',
@@ -161,10 +182,22 @@ export default {
       //     "Team3": "克罗地亚",
       //     "Team4": "摩洛哥",
       //   },
-      //   "group3": {},
+      //   "group3": {
+      //     "Team2": "法国",
+      //     "Team3": "克罗地亚",
+      //   },
       // },
       MRField_dict: {},
       InstanceNumber: null,
+      EndConditionTypes: [
+        { label: '', value: '' },
+        { label: 'MessageNum', value: 'MessageNum' },
+        { label: 'Time', value: 'Time' },
+        { label: 'Race', value: 'Race' },
+      ],
+      EndConditionType: '',
+      ConditionNum: null,
+      ConditionTime: null,
     }
   },
   created() {
@@ -215,6 +248,9 @@ export default {
 
         const Style = businessObject.di;  // 获取element的颜色
         element.color = Style.stroke ? Style.stroke : "#000000";  // 同步更新自定义属性栏的color
+
+        this.ConditionNum = businessObject.ConditionNum;
+        this.ConditionTime = businessObject.ConditionTime;
       }
     },
     updateName(name) {
@@ -322,8 +358,8 @@ export default {
     // 更新扩展数据field的value
     update_expansion_data(event, key) {
       const value = event.target.value;
-      let properties = {}
-      properties[key] = value
+      let properties = {};
+      properties[key] = value;
       this.updateProperties(properties);  // 调用属性更新方法
 
       // 如果是Task类型的数据还要更新一下MessageRelation
@@ -335,20 +371,11 @@ export default {
     // 更新扩展数据field的key
     // 修改key的思路，将value保存下来，先将原old_key、value对删除，再增加一个new_key、value对
     update_expansion_data_key(event, old_key, value) {
-      console.log("改变输入框引发是事件", event);
-      console.log("旧key:", old_key);
-      console.log("新key:", event.target.value);
       const new_key = event.target.value;
-      console.log("原本的value:", this.element[old_key]);
-      console.log("当前元素:", this.element);
-
-      console.log(`删除键为${old_key}的这条数据:`);
       Vue.delete(this.DataFields_dict, old_key);
-      Vue.delete(this.element, old_key);
-      this.element[new_key] = value;
-      let properties = {}
+      let properties = {};
       properties[old_key] = undefined;
-      properties[new_key] = value
+      properties[new_key] = value;
       this.updateProperties(properties);  // 调用属性更新方法
 
       this.synchronous_updateKey_mrfield_item(old_key, new_key, value);
@@ -477,6 +504,10 @@ export default {
     // 适用于Task，当上面的item更新后同步更新MessageRelation里Group里修改的item
     synchronous_update_mrfield_item(Key, newValue) {
       const businessObject = this.element.businessObject;
+      if (!businessObject.mrfield_list) {
+        return;
+      }
+
       let mrfield_list = businessObject.mrfield_list.$attrs;
       let mrfield_list_item = businessObject.mrfield_list;
 
@@ -495,6 +526,10 @@ export default {
     // 适用于Task，当上面的item的Key更新后同步更新MessageRelation里Group里修改的item
     synchronous_updateKey_mrfield_item(oldKey, newKey, Value) {
       const businessObject = this.element.businessObject;
+      if (!businessObject.mrfield_list) {
+        return;
+      }
+
       let mrfield_list = businessObject.mrfield_list.$attrs;
       let mrfield_list_item = businessObject.mrfield_list;
 
@@ -514,6 +549,10 @@ export default {
     // 适用于Task，当上面的item删除后同步删除MessageRelation里Group里修改的item
     synchronous_delete_mrfield_item(Key) {
       const businessObject = this.element.businessObject;
+      if (!businessObject.mrfield_list) {
+        return;
+      }
+
       let mrfield_list = businessObject.mrfield_list.$attrs;
       let mrfield_list_item = businessObject.mrfield_list;
 
@@ -552,71 +591,65 @@ export default {
       // 获取多实例特性
       const loopCharacteristics = element.businessObject.loopCharacteristics;
 
+      // 先删除可能存在的 label 元素 和 EndCondition图标
+      this.delete_InstanceNumber_label();
+      this.delete_EndConditionIcon();
+
       // 检查多实例特性是否存在
       if (!loopCharacteristics) {
         console.log('该元素没有多实例特性');
-        this.pre_delete_InstanceNumber_label();  // 先删除可能存在的 label 元素
-        delete element.businessObject.instancenumber;
+        delete element.businessObject.InstanceNumber;
+        delete element.businessObject.EndCondition;
         return false;
       }
 
       // 检查多实例特性的类型是否为 bpmn:MultiInstanceLoopCharacteristics
       if (loopCharacteristics.$type !== 'bpmn:MultiInstanceLoopCharacteristics') {
         console.log('该元素的多实例特性类型不正确');
-        this.pre_delete_InstanceNumber_label();  // 先删除可能存在的 label 元素
-        delete element.businessObject.instancenumber;
+        delete element.businessObject.InstanceNumber;
+        delete element.businessObject.EndCondition;
         return false;
       }
 
-      // 检查多实例特性的 isSequential 属性
-      const isSequential = loopCharacteristics.isSequential;
-
-      // 检查多实例特性的 loopCardinality 属性
-      const loopCardinality = loopCharacteristics.loopCardinality;
-
-      console.log('多实例属性', loopCharacteristics);
-      console.log('是否串行执行', isSequential);
-      console.log('循环次数', loopCardinality);
       this.paint_InstanceNumber();
-
+      this.paint_EndConditionIcon();
       return true;
     },
 
     // 更新InstanceNuber
-    update_InstanceNuber(event, instancenumber) {
-      const instancenumber_value = event.target.value;
-      let properties = {}
-      properties[instancenumber] = instancenumber_value
-
-      this.updateProperties(properties);  // 调用属性更新方法
+    update_InstanceNuber(event, InstanceNumber) {
+      const InstanceNumber_value = event.target.value;
+      this.element.businessObject[InstanceNumber] = InstanceNumber_value;
+      this.delete_InstanceNumber_label();
       this.paint_InstanceNumber();  // 将InstanceNumber画出来
     },
 
-    // 预先删除InstanceNumber_label
-    pre_delete_InstanceNumber_label() {
+    // 删除InstanceNumber_label
+    delete_InstanceNumber_label() {
+      if (!this.element.InstanceNumber_label) {
+        return
+      }
       const { modeler, element } = this;
       const elementRegistry = modeler.get('elementRegistry');
       const gfx = elementRegistry.getGraphics(element); // 获取元素图形表示
 
       // 先删除可能存在的 label 元素
-      if (element.InstanceNumber_label) {
-        gfx.removeChild(element.InstanceNumber_label);  // 将画布上先前显示的数字删去
-        delete element.InstanceNumber_label;  // 删掉这个标签
-      }
+
+      gfx.removeChild(element.InstanceNumber_label);  // 将画布上先前显示的数字删去
+      delete element.InstanceNumber_label;  // 删掉这个标签
     },
 
     // 将InstanceNumber画出来
     paint_InstanceNumber() {
+      const InstanceNumber = this.element.businessObject.InstanceNumber;  // 获取要显示的文本
+      this.InstanceNumber = InstanceNumber;
+      if (!InstanceNumber) {  // 如果element.businessObject.InstanceNumber为空就直接返回
+        return;
+      }
+
       const { modeler, element } = this;
       const elementRegistry = modeler.get('elementRegistry');
-      const businessObject = element.businessObject;  // 获取该元素对应的 businessObject
-
-      const InstanceNumber = businessObject.instancenumber;  // 获取要显示的文本
-      this.InstanceNumber = InstanceNumber;
       const gfx = elementRegistry.getGraphics(element); // 获取元素图形表示
-
-      // 先删除可能存在的 label 元素
-      this.pre_delete_InstanceNumber_label();
 
       // 创建并设置label元素
       const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -627,18 +660,87 @@ export default {
       // 设置label的位置
       const bbox = gfx.getBBox();
       const x = bbox.x + bbox.width / 2;
-      const y = bbox.y + bbox.height + 15;
+      const y = bbox.y + bbox.height + 13;
       label.setAttribute('x', x);
       label.setAttribute('y', y);
-      label.textContent = InstanceNumber;
+      label.textContent = `[ ${InstanceNumber} ]`;
 
-      // 添加label元素到元素图形中
-      gfx.appendChild(label);
-
-      // 保存 label 元素
-      element.InstanceNumber_label = label;
+      gfx.appendChild(label);  // 添加label元素到元素图形中
+      element.InstanceNumber_label = label;   // 保存 label 元素
     },
 
+    // 修改下拉框EndCondition后的动作
+    changeEndConditionType(event) {
+      const { modeler, element } = this
+      const value = event.target.value;  // 当前下拉框选择的值
+      element.businessObject.EndCondition = value;
+      this.EndConditionType = value;
+
+      // 先删除图片，再加新的图片
+      this.delete_EndConditionIcon();
+      this.paint_EndConditionIcon();
+    },
+
+    // 将EndConditionIcon画在图形上
+    paint_EndConditionIcon() {
+      let EndCondition = this.element.businessObject.EndCondition;
+      this.EndConditionType = EndCondition ? EndCondition : null;
+      if (!EndCondition) {  // 如果element.businessObject.EndCondition为空就直接返回
+        return;
+      }
+
+      const { modeler, element } = this;
+      const elementRegistry = modeler.get('elementRegistry');
+      const gfx = elementRegistry.getGraphics(element);  // 获取任务元素的图形
+      const bounds = gfx.getBBox();  // 获取图形的边界框
+
+      let img = null;   // 要绘制的图像
+      if (EndCondition === "MessageNum") {
+        img = 'https://static.thenounproject.com/png/487908-200.png';
+      } else if (EndCondition === "Time") {
+        img = 'https://static.thenounproject.com/png/5334445-200.png';
+      } else {
+        img = 'https://static.thenounproject.com/png/3968257-200.png';
+      }
+
+      // 创建图像元素
+      const EndConditionIcon = svgCreate('image', {
+        x: bounds.x + bounds.width - 36,
+        y: bounds.y + 6,
+        width: 28,
+        height: 28,
+        href: img
+      })
+      svgAppend(gfx, EndConditionIcon);   // 在任务元素的图形上绘制图标
+      element.EndConditionIcon = EndConditionIcon;  // 将EndConditionIcon保存在shape里面，方便日后删除
+    },
+
+    // EndConditionIcon从图形上删除
+    delete_EndConditionIcon() {
+      // 如果element.EndConditionIcon为空表面图片不存在，直接返回
+      if (!this.element.EndConditionIcon) {
+        return;
+      }
+
+      const { modeler, element } = this;
+      const elementRegistry = modeler.get('elementRegistry');
+      const gfx = elementRegistry.getGraphics(element);  // 获取任务元素的图形
+
+      gfx.removeChild(element.EndConditionIcon);  // 将画布上先前显示的图片删去
+      delete this.element.EndConditionIcon;
+    },
+
+    update_ConditionNum(event, ConditionNum) {
+      const ConditionNum_value = event.target.value;
+      this.element.businessObject[ConditionNum] = ConditionNum_value;
+      this.ConditionNum = ConditionNum_value;
+    },
+
+    update_ConditionTime(event, ConditionTime) {
+      const ConditionTime_value = event.target.value;
+      this.element.businessObject[ConditionTime] = ConditionTime_value;
+      this.ConditionTime = ConditionTime_value;
+    },
 
     /**
      * 改变控件触发的事件
@@ -646,12 +748,7 @@ export default {
      * @param { String } 要修改的属性的名称
      */
     changeField(event, type) {
-      console.log("改变输入框引发是事件", event);
-      console.log("要修改的key:", type);
-      console.log("要修改的value", event.target.value);
       const value = event.target.value;
-      console.log("原本的value", this.element[type]);
-      console.log("当前元素", this.element);
       this.element[type] = value
       let properties = {}
       properties[type] = value

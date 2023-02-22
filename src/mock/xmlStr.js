@@ -14,21 +14,9 @@ export var xmlStr = `
         <documentation>78</documentation>
     </dataStoreReference>
 
-    <dataStoreReference id="DataStoreReference_763" name="DataStoreReference">
-        <documentation>78</documentation>
-    </dataStoreReference>
-
     <dataObjectReference id="sct20230203" name="物联网一班" boy1="宋超田" boy2="解一博" boy3="张荣林">
         <documentation>56</documentation>
     </dataObjectReference>
-
-    <dataObjectReference id="DataObjectReference_168" name="DataObjectReference">
-        <documentation>56</documentation>
-    </dataObjectReference>
-
-    <sendTask id="Activity_0jsgobr" name="Send Task" />
-
-    <receiveTask id="Activity_133z9tq" name="Receive Task" />
 
     <sendTask id="send20230204" name="世界杯八强" Team1="阿根廷" Team2="法国" Team3="克罗地亚" Team4="摩洛哥" Team5="荷兰" Team6="英格兰" Team7="巴西" Team8="葡萄牙">
         <mrfields:mrfield_list mrfield1_name="group1" mrfield2_name="group2" mrfield3_name="group3" mrfield4_name="group4">   
@@ -39,7 +27,6 @@ export var xmlStr = `
         </mrfields:mrfield_list>
     </sendTask>
 
-
     <receiveTask id="rec20230204" name="世界杯四强" Team1="阿根廷" Team2="法国" Team3="克罗地亚" Team4="摩洛哥">
       <mrfields:mrfield_list mrfield1_name="group1" mrfield2_name="group2" mrfield3_name="group3">   
         <mrfields:mrfield1 Team1="阿根廷" Team2="法国" /> 
@@ -48,14 +35,15 @@ export var xmlStr = `
       </mrfields:mrfield_list>
     </receiveTask>
 
-    <sendTask id="Activity_15avj39" name="并行多实例" innum:instancenumber="6">
+    <sendTask id="MultiSend20230222" name="并行多实例" multi:InstanceNumber="5" multi:EndCondition="Race" multi:ConditionNum="3" multi:ConditionTime="60">
         <multiInstanceLoopCharacteristics />
     </sendTask>
 
-    <receiveTask id="Activity_0nvdeh9" name="串行多实例">
-        <standardLoopCharacteristics />
+    <receiveTask id="MultiRec20230222" name="串行多实例" multi:EndCondition="Time" multi:ConditionTime="30">
+        <multiInstanceLoopCharacteristics isSequential="true" />
     </receiveTask>
 
+   
     <subProcess id="Activity_0tutjxc" name="串行多实例子流程">
         <multiInstanceLoopCharacteristics isSequential="true" />
         <startEvent id="Event_0p76utx" /> 
@@ -84,9 +72,9 @@ export var xmlStr = `
 <bpmndi:BPMNPlane id="BpmnPlane_1" bpmnElement="Collaboration_1bwzdtx">
   
  <bpmndi:BPMNShape id="sct20221219_di" bpmnElement="sct20221219" bioc:stroke="#0000ff" bioc:fill="none">
-      <omgdc:Bounds x="725" y="85" width="50" height="50" />
+      <omgdc:Bounds x="325" y="85" width="50" height="50" />
       <bpmndi:BPMNLabel>
-          <omgdc:Bounds x="717" y="143" width="67" height="14" />
+          <omgdc:Bounds x="317" y="143" width="67" height="14" />
         </bpmndi:BPMNLabel>
   </bpmndi:BPMNShape>
 
@@ -95,54 +83,30 @@ export var xmlStr = `
     <bpmndi:BPMNLabel />
   </bpmndi:BPMNShape>
 
-  <bpmndi:BPMNShape id="DataObjectReference_168_di" bpmnElement="DataObjectReference_168">
-    <omgdc:Bounds x="238" y="74" width="36" height="50" />
-    <bpmndi:BPMNLabel>
-      <omgdc:Bounds x="214" y="131" width="84" height="27" />
-    </bpmndi:BPMNLabel>
-  </bpmndi:BPMNShape>
-
   <bpmndi:BPMNShape id="sct20230203_di" bpmnElement="sct20230203" bioc:stroke="#ff0000" bioc:fill="none">
-  <omgdc:Bounds x="732" y="195" width="36" height="50" />
+  <omgdc:Bounds x="332" y="195" width="36" height="50" />
     <bpmndi:BPMNLabel>
-    <omgdc:Bounds x="722" y="253" width="56" height="14" />
+    <omgdc:Bounds x="322" y="253" width="56" height="14" />
     </bpmndi:BPMNLabel>
-  </bpmndi:BPMNShape>
-
-  <bpmndi:BPMNShape id="DataStoreReference_763_di" bpmnElement="DataStoreReference_763">
-    <omgdc:Bounds x="229" y="172" width="50" height="50" />
-    <bpmndi:BPMNLabel>
-      <omgdc:Bounds x="213" y="229" width="83" height="27" />
-    </bpmndi:BPMNLabel>
-  </bpmndi:BPMNShape>
-
-  <bpmndi:BPMNShape id="Activity_0jsgobr_di" bpmnElement="Activity_0jsgobr">
-    <omgdc:Bounds x="350" y="80" width="100" height="80" />
-    <bpmndi:BPMNLabel />
   </bpmndi:BPMNShape>
 
   <bpmndi:BPMNShape id="send20230204_di" bpmnElement="send20230204">
-    <omgdc:Bounds x="840" y="80" width="100" height="80" />
+    <omgdc:Bounds x="540" y="80" width="100" height="80" />
     <bpmndi:BPMNLabel />
   </bpmndi:BPMNShape>
 
   <bpmndi:BPMNShape id="rec20230204di" bpmnElement="rec20230204">
-    <omgdc:Bounds x="840" y="190" width="100" height="80" />
+    <omgdc:Bounds x="540" y="190" width="100" height="80" />
     <bpmndi:BPMNLabel />
   </bpmndi:BPMNShape>
 
-  <bpmndi:BPMNShape id="Activity_133z9tq_di" bpmnElement="Activity_133z9tq">
-    <omgdc:Bounds x="350" y="180" width="100" height="80" />
+  <bpmndi:BPMNShape id="BPMNShape_1muxk7q" bpmnElement="MultiSend20230222">
+    <omgdc:Bounds x="700" y="180" width="100" height="80" />
     <bpmndi:BPMNLabel />
   </bpmndi:BPMNShape>
 
-  <bpmndi:BPMNShape id="BPMNShape_1muxk7q" bpmnElement="Activity_15avj39">
-    <omgdc:Bounds x="560" y="320" width="100" height="80" />
-    <bpmndi:BPMNLabel />
-  </bpmndi:BPMNShape>
-
-  <bpmndi:BPMNShape id="BPMNShape_159v4bn" bpmnElement="Activity_0nvdeh9">
-    <omgdc:Bounds x="790" y="320" width="100" height="80" />
+  <bpmndi:BPMNShape id="BPMNShape_159v4bn" bpmnElement="MultiRec20230222">
+    <omgdc:Bounds x="700" y="300" width="100" height="80" />
     <bpmndi:BPMNLabel />
   </bpmndi:BPMNShape>
 
@@ -179,6 +143,8 @@ export var xmlStr = `
     <di:waypoint x="380" y="458" />
     <di:waypoint x="380" y="522" />
   </bpmndi:BPMNEdge>
+
+
 
 </bpmndi:BPMNPlane>
 </bpmndi:BPMNDiagram>
