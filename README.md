@@ -12,13 +12,13 @@
 
 对于 **DataObjectReference 和 DataStoreReference**，提供**定义多个数据项（数量无限制）**的功能，可参考如下右图。图中，点击“+”号可创建新的数据项，数据项名称由用户自定义（如 datafield1,datafield2…），保存模型时，所创建的数据项将被关联至对应的元素并同步保存。
 
-![需求2](screenshoot\需求2.png)
+![需求2](https://github.com/SongChaotian/bpmn-vue-sct/blob/main/screenshoot/需求2.png)
 
 ### 需求3：
 
 对于**消息收发任务**，需要提供与 2 类似的功能，可参考如下右图。图中点击“+”号可创建新的消息字段，消息字段名称由用户自定义（如 MField1, MField2…），保存模型时，所创建的消息字段将被关联至对应的任务并同步保存。
 
-![需求3](screenshoot\需求3.png)
+![需求3](https://github.com/SongChaotian/bpmn-vue-sct/blob/main/screenshoot/需求3.png)
 
 ------
 
@@ -44,7 +44,7 @@
 
 对于带有多实例标志（三横杠或三竖杠）的元素（多实例池、多实例活动、多实例子流程等，如下图），**增加一个属性**，如 InstanceNumber，**标识该元素的多实例数量**。此属性的值可由用户填写，**提供一个默认值**（如 None），表示实例数无法确定。拓展的此属性最好能在图形上显示，保存要求同上。
 
-![需求5](screenshoot\需求5.png)
+![需求5](https://github.com/SongChaotian/bpmn-vue-sct/blob/main/screenshoot/需求5.png)
 
 ------
 
@@ -68,5 +68,5 @@
 
 （ConditionNum 和 ConditionTime）也需被显式记录。
 
-![需求6](screenshoot\需求6.png)
+![需求6](https://github.com/SongChaotian/bpmn-vue-sct/blob/main/screenshoot/需求6.png)
 
