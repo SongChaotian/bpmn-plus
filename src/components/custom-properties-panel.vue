@@ -2,6 +2,14 @@
   <div class="containers" ref="content">
     <div class="canvas" ref="canvas"></div>
     <properties-view v-if="bpmnModeler" :modeler="bpmnModeler"></properties-view>
+    <ul class="buttons">
+      <li>
+        <a ref="saveDiagram" href="javascript:" title="保存为bpmn">保存为bpmn</a>
+      </li>
+      <li>
+        <a ref="saveSvg" href="javascript:" title="保存为svg">保存为svg</a>
+      </li>
+    </ul>
   </div>
 </template>
 
@@ -74,12 +82,46 @@ export default {
     // 添加绑定事件
     addBpmnListener() {
       const outer = this;
+      // 获取a标签dom节点
+      const downloadLink = this.$refs.saveDiagram;  // 保存为bpmn的按钮
+      const downloadSvgLink = this.$refs.saveSvg;  // 保存为svg的按钮
       // 给图绑定事件，当图有发生改变就会触发这个事件
       this.bpmnModeler.on('commandStack.changed', function () {
         outer.saveDiagram(function (err, xml) {  // 这里获取到的就是最新的xml信息
           console.log(xml);  // 将最新的xml信息打印出来
-        })
-      })
+          outer.setEncoded(downloadLink, 'diagram.bpmn', err ? null : xml)
+        });
+        outer.saveSVG(function (err, svg) {
+          outer.setEncoded(downloadSvgLink, 'diagram.svg', err ? null : svg)
+        });
+      });
+    },
+
+    // 下载为bpmn格式,done是个函数，调用的时候传入的
+    saveDiagram(done) {
+      // 把传入的done再传给bpmn原型的saveXML函数调用
+      this.bpmnModeler.saveXML({ format: true }, function (err, xml) {
+        done(err, xml);
+      });
+    },
+    saveSVG(done) {   // 把传入的done再传给bpmn原型的saveSVG函数调用
+      this.bpmnModeler.saveSVG(done);
+    },
+
+    /**
+     * 当图发生改变的时候会调用这个函数
+     * @param { HTMLElement } link - 点击的按钮
+     * @param { string } name - 保存的文件名字
+     * @param { string } data - 图的xml
+     */
+    setEncoded(link, name, data) {
+      const encodedData = encodeURIComponent(data);  // 把xml转换为URI，下载要用到的
+      // 下载图的具体操作,改变link的属性
+      if (data) {
+        link.className = 'active';  // className令link标签可点击
+        link.href = 'data:application/bpmn20-xml;charset=UTF-8,' + encodedData;  // href令能下载
+        link.download = name;  // download是下载的文件的名字
+      }
     },
 
     addModelerListener() {
@@ -141,14 +183,6 @@ export default {
         })
       })
     },
-
-    // 下载为bpmn格式,done是个函数，调用的时候传入的
-    saveDiagram(done) {
-      // 把传入的done再传给bpmn原型的saveXML函数调用
-      this.bpmnModeler.saveXML({ format: true }, function (err, xml) {
-        done(err, xml);
-      })
-    }
   },
   // 计算属性
   computed: {}
@@ -172,5 +206,32 @@ export default {
   right: 0;
   top: 0;
   width: 300px;
+}
+
+.buttons {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+}
+
+
+.buttons li {
+  display: inline-block;
+  margin: 5px;
+}
+
+.buttons li a {
+  color: #999;
+  background: #eee;
+  cursor: not-allowed;
+  padding: 8px;
+  border: 1px solid #ccc;
+  text-decoration: none;
+}
+
+.buttons li a.active {
+  color: #333;
+  background: #fff;
+  cursor: pointer;
 }
 </style>
