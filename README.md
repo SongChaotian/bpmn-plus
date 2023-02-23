@@ -32,7 +32,7 @@ This project is an extension of the right-hand properties panel function based o
 
    ![需求3](https://github.com/SongChaotian/bpmn-vue-sct/blob/main/screenshoot/004.png)
 
-   ![需求3](screenshoot\005.png)
+   ![需求3](https://github.com/SongChaotian/bpmn-vue-sct/blob/main/screenshoot/005.png)
 
 4. For message send/receive tasks, an additional feature has been implemented on the basis of requirement 3, similar to extension 2. It is temporarily referred to as "`Add MessageRelation Field`". Clicking on the "+" sign allows users to add new data fields (whose names are customizable, such as group1, group2,...). The content of each group can be selected from among several of the Team1, Team2,... data items already created in extension 2 (with no limit on the number of items that can be included in each group), or they can be manually inputted. The same saving requirements as mentioned above apply.
 
