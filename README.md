@@ -6,8 +6,7 @@ This project is abut BPMN properties extension , and based on BPMN.js and Vue im
 
 ## Extension description: 
 
-- The following extensions are based on bpmn.io. 
-
+- The following extensions are based on [bpmn.io](https://bpmn.io/). 
 - The content of the extension is saved in the model file with XML format.
 
 
