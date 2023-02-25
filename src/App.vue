@@ -1,11 +1,11 @@
 <template>
   <div id="app">
     <div class="content">
-      <ul class="router_ul">
+      <!-- <ul class="router_ul">
         <router-link v-for="link in links" :key="link.to" tag="li" active-class="activeClass" :to="link.to">
           {{ link.title }}
         </router-link>
-      </ul>
+      </ul> -->
       <router-view></router-view>
     </div>
   </div>

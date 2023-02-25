@@ -1,125 +1,122 @@
 <template>
-  <div class="custom-properties-panel">
-    <div class="empty" v-if="selectedElements.length <= 0">请选择一个元素</div>
-    <div class="empty" v-else-if="selectedElements.length > 1">只能选择一个元素</div>
-    <div v-else>
-      <fieldset class="element-item">
-        <label>id</label>
-        <span>{{ element.id }}</span>
-      </fieldset>
-      <fieldset class="element-item">
-        <label>name</label>
-        <input class="form-control" :value="element.name" @change="event => changeField(event, 'name')" />
-      </fieldset>
+  <div class="custom-properties-panel" v-if="selectedElements.length == 1">
+    <fieldset class="element-item">
+      <label>id</label>
+      <span>{{ element.id }}</span>
+    </fieldset>
+    <fieldset class="element-item">
+      <label>name</label>
+      <input class="form-control" :value="element.name" @change="event => changeField(event, 'name')" />
+    </fieldset>
 
-      <fieldset class="element-item form-control-color-item">
-        <label>节点颜色</label>
-        <input class="form-control" type="color" :value="element.color" @change="event => onChangeColor(event)" />
-      </fieldset>
-      <fieldset class="element-item" v-if="isEvent">
-        <label>修改event节点类型</label>
-        <select class="form-select" @change="changeEventType" :value="eventType">
-          <option v-for="option in eventTypes" :key="option.value" :value="option.value">{{ option.label }}</option>
-        </select>
-      </fieldset>
+    <fieldset class="element-item">
+      <label>Node Stroke Color</label>
+      <input class="form-control" type="color" :value="element.color" @change="event => onChangeColor(event)" />
+    </fieldset>
 
-      <fieldset class="element-item" v-if="isTask">
-        <label>修改Task节点类型</label>
-        <select class="form-select" @change="changeTaskType" :value="taskType">
-          <option v-for="option in taskTypes" :key="option.value" :value="option.value">{{ option.label }}</option>
-        </select>
-      </fieldset>
+    <fieldset class="element-item" v-if="isEvent">
+      <label>Event Type</label>
+      <select class="form-select" @change="changeEventType" :value="eventType">
+        <option v-for="option in eventTypes" :key="option.value" :value="option.value">{{ option.label }}</option>
+      </select>
+    </fieldset>
 
-      <fieldset class="element-item" v-if="isMultiInstance">
-        <label>InstanceNumber</label>
-        <input class="form-control" :value="InstanceNumber ? InstanceNumber : 'None'"
-          @change="event => update_InstanceNuber(event, 'InstanceNumber')" />
-      </fieldset>
+    <fieldset class="element-item" v-if="isTask">
+      <label>Task Type</label>
+      <select class="form-select" @change="changeTaskType" :value="taskType">
+        <option v-for="option in taskTypes" :key="option.value" :value="option.value">{{ option.label }}</option>
+      </select>
+    </fieldset>
 
-      <fieldset class="element-item" v-if="isMultiInstance">
-        <label>EndCondition</label>
-        <select class="form-select" @change="changeEndConditionType" :value="EndConditionType">
-          <option v-for="option in EndConditionTypes" :key="option.value" :value="option.value">{{ option.label }}
-          </option>
-        </select>
-        <fieldset class="element-item mt-2" v-if="EndConditionType === 'MessageNum' || EndConditionType === 'Race'">
-          <label>ConditionNum</label>
-          <input class="form-control" :value="ConditionNum ? ConditionNum : InstanceNumber"
-            @change="event => update_ConditionNum(event, 'ConditionNum')" />
-        </fieldset>
-        <fieldset class="element-item mt-2" v-if="EndConditionType === 'Time' || EndConditionType === 'Race'">
-          <label>ConditionTime</label>
-          <input class="form-control" :value="ConditionTime"
-            @change="event => update_ConditionTime(event, 'ConditionTime')" />
-        </fieldset>
-      </fieldset>
+    <fieldset class="element-item" v-if="isMultiInstance">
+      <label>InstanceNumber</label>
+      <input class="form-control" :value="InstanceNumber ? InstanceNumber : 'None'"
+        @change="event => update_InstanceNuber(event, 'InstanceNumber')" />
+    </fieldset>
 
-      <div class="card mt-2" v-if="isDataStoreReference || isDataObjectReference || isTask">
-        <div class="card-body">
-          <div class="card-title">
-            <label v-if="isDataStoreReference || isDataObjectReference">Add Data Field</label>
-            <label v-if="isTask">Add Message Field</label>
-            <div class="btn btn-outline-primary btn-sm ms-2" @click="add_expansion_data">+</div>
-          </div>
-          <div class="card-text">
-            <div class="row mt-2" v-for="(value, key) in DataFields_dict" :key="key">
-              <div class="col-5">
-                <input type="text" class="form-control" placeholder="key" :value="key"
-                  @change="event => update_expansion_data_key(event, key, value)" />
-              </div>
-              <div class="col-5">
-                <input type="text" class="form-control" placeholder="value" :value="value"
-                  @change="event => update_expansion_data(event, key)" />
-              </div>
-              <div class="col-2">
-                <div class="btn btn-sm btn-outline-danger" @click="delete_expansion_data(key)">×</div>
-              </div>
+    <fieldset class="element-item" v-if="isMultiInstance">
+      <label>EndCondition</label>
+      <select class="form-select" @change="changeEndConditionType" :value="EndConditionType">
+        <option v-for="option in EndConditionTypes" :key="option.value" :value="option.value">{{ option.label }}
+        </option>
+      </select>
+      <fieldset class="element-item mt-2" v-if="EndConditionType === 'MessageNum' || EndConditionType === 'Race'">
+        <label>ConditionNum</label>
+        <input class="form-control" :value="ConditionNum ? ConditionNum : InstanceNumber"
+          @change="event => update_ConditionNum(event, 'ConditionNum')" />
+      </fieldset>
+      <fieldset class="element-item mt-2" v-if="EndConditionType === 'Time' || EndConditionType === 'Race'">
+        <label>ConditionTime</label>
+        <input class="form-control" :value="ConditionTime"
+          @change="event => update_ConditionTime(event, 'ConditionTime')" />
+      </fieldset>
+    </fieldset>
+
+    <div class="card mt-2" v-if="isDataStoreReference || isDataObjectReference || isTask">
+      <div class="card-body">
+        <div class="card-title">
+          <label v-if="isDataStoreReference || isDataObjectReference">Add Data Field</label>
+          <label v-if="isTask">Add Message Field</label>
+          <div class="btn btn-outline-primary btn-sm ms-2" @click="add_expansion_data">+</div>
+        </div>
+        <div class="card-text">
+          <div class="row mt-2" v-for="(value, key) in DataFields_dict" :key="key">
+            <div class="col-5">
+              <input type="text" class="form-control" placeholder="key" :value="key"
+                @change="event => update_expansion_data_key(event, key, value)" />
+            </div>
+            <div class="col-5">
+              <input type="text" class="form-control" placeholder="value" :value="value"
+                @change="event => update_expansion_data(event, key)" />
+            </div>
+            <div class="col-2">
+              <div class="btn btn-sm btn-outline-danger" @click="delete_expansion_data(key)">×</div>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <div class="card mt-2" v-if="isTask">
-        <div class="card-body">
-          <div class="card-title">
-            <label>Add MessageRelation</label>
-            <div class="btn btn-outline-primary btn-sm ms-2" @click="add_mrfield_group">+</div>
-          </div>
+    <div class="card mt-2" v-if="isTask">
+      <div class="card-body">
+        <div class="card-title">
+          <label>Add MessageRelation</label>
+          <div class="btn btn-outline-primary btn-sm ms-2" @click="add_mrfield_group">+</div>
+        </div>
 
-          <div class="card-text">
-            <div class="row mt-2" v-for="(MRField, groupName) in MRField_dict" :key="groupName">
-              <div class="col-6">
-                <input type="text" class="form-control" placeholder="MRField" :value="groupName"
-                  @change="event => update_MRField_GroupName(event, groupName)" />
+        <div class="card-text">
+          <div class="row mt-2" v-for="(MRField, groupName) in MRField_dict" :key="groupName">
+            <div class="col-6">
+              <input type="text" class="form-control" placeholder="MRField" :value="groupName"
+                @change="event => update_MRField_GroupName(event, groupName)" />
+            </div>
+            <div class="col-3">
+              <div class="dropdown">
+                <button type="button" class="btn btn-outline-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown">
+                  +
+                </button>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a class="dropdown-item" href="#"
+                      v-for="(DataFields_dict_value, DataFields_dict_key) in DataFields_dict" :key="DataFields_dict_key"
+                      @click="add_mrfield_item(groupName, DataFields_dict_key, DataFields_dict_value)">
+                      {{ DataFields_dict_key }}：{{ DataFields_dict_value }}
+                    </a>
+                  </li>
+                </ul>
               </div>
-              <div class="col-3">
-                <div class="dropdown">
-                  <button type="button" class="btn btn-outline-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown">
-                    +
-                  </button>
-                  <ul class="dropdown-menu">
-                    <li>
-                      <a class="dropdown-item" href="#"
-                        v-for="(DataFields_dict_value, DataFields_dict_key) in DataFields_dict" :key="DataFields_dict_key"
-                        @click="add_mrfield_item(groupName, DataFields_dict_key, DataFields_dict_value)">
-                        {{ DataFields_dict_key }}：{{ DataFields_dict_value }}
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <div class="col-2">
-                <div class="btn btn-outline-danger btn-sm" @click="delete_mrfield_group(groupName)">×</div>
-              </div>
+            </div>
+            <div class="col-2">
+              <div class="btn btn-outline-danger btn-sm" @click="delete_mrfield_group(groupName)">×</div>
+            </div>
 
-              <div class="row" v-for="(MRField_item, MRField_item_key) in MRField" :key="MRField_item_key">
-                <div class="col-10">
-                  <p class="h6 small mark" style="float:left">{{ MRField_item_key }}：{{ MRField_item }}</p>
-                </div>
-                <div class="col-1">
-                  <div class="btn btn-outline-danger btn-sm" style="float:left"
-                    @click="delete_mrfield_item(groupName, MRField_item_key)">×
-                  </div>
+            <div class="row" v-for="(MRField_item, MRField_item_key) in MRField" :key="MRField_item_key">
+              <div class="col-10">
+                <p class="h6 small mark" style="float:left">{{ MRField_item_key }}：{{ MRField_item }}</p>
+              </div>
+              <div class="col-1">
+                <div class="btn btn-outline-danger btn-sm" style="float:left"
+                  @click="delete_mrfield_item(groupName, MRField_item_key)">×
                 </div>
               </div>
             </div>
@@ -213,7 +210,7 @@ export default {
       modeler.on('selection.changed', e => {
         this.selectedElements = e.newSelection;  // 数组，可能有多个（Windows下按住Ctrl可以选多个元素）
         this.element = e.newSelection[0];  // 默认取第一个
-        console.log(this.element);
+        // console.log(this.element);
         this.setDefaultProperties();  // 设置一些默认的值
       });
 
@@ -240,7 +237,7 @@ export default {
         const { name } = businessObject;
         if (this.verifyIsEvent(type)) {
           this.eventType = businessObject.eventDefinitions ? businessObject.eventDefinitions[0]['$type'] : ''
-          console.log(this.eventType)
+          // console.log(this.eventType)
         } else if (this.verifyIsTask(type)) {
           this.taskType = type
         }
@@ -261,7 +258,7 @@ export default {
     },
     onChangeColor(event) {  // 改变节点颜色
       const color = event.target.value;
-      console.log(color);
+      // console.log(color);
       const { modeler, element } = this;
       const modeling = modeler.get('modeling');
       modeling.setColor(element, {
@@ -270,7 +267,7 @@ export default {
       })
     },
     changeEventType(event) {  // 改变下拉框
-      console.log(event)
+      // console.log(event)
       const { modeler, element } = this
       const value = event.target.value;  // 当前下拉框选择的值
       const bpmnReplace = modeler.get('bpmnReplace')
@@ -281,7 +278,7 @@ export default {
       })
     },
     changeTaskType(event) {
-      console.log(event)
+      // console.log(event)
       const { modeler, element } = this
       const value = event.target.value;  // 当前下拉框选择的值
       const bpmnReplace = modeler.get('bpmnReplace')
@@ -343,7 +340,7 @@ export default {
 
     // 删除扩展数据field
     delete_expansion_data(key) {
-      console.log(`删除键为${key}的这条数据:`);
+      // console.log(`删除键为${key}的这条数据:`);
       Vue.delete(this.DataFields_dict, key);
       let properties = {}
       properties[key] = undefined;
@@ -408,7 +405,7 @@ export default {
     // 适用于Task，增加一个MessageRelation的Group
     add_mrfield_group() {
       let newGroupItem = 0;
-      console.log("增加一个组");
+      // console.log("增加一个组");
       const { modeler, element } = this;
       const bpmnFactory = modeler.get('bpmnFactory');
       const businessObject = element.businessObject;
@@ -442,7 +439,7 @@ export default {
 
     // 适用于Task，删除一个MessageRelation的Group
     delete_mrfield_group(GroupName) {
-      console.log("删除组的名为：", GroupName);
+      // console.log("删除组的名为：", GroupName);
 
       const businessObject = this.element.businessObject;
       let mrfield_list = businessObject.mrfield_list.$attrs;
@@ -452,10 +449,10 @@ export default {
         if (mrfield_list[i] === GroupName) {
 
           let mrfield_Keyname = i.split("_")[0];
-          console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
+          // console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
           delete mrfield_list_item[mrfield_Keyname];
           delete mrfield_list[i];
-          console.log("删除完成");
+          // console.log("删除完成");
         }
       }
       this.read_MessageRelation();
@@ -463,8 +460,8 @@ export default {
 
     // 适用于Task，向MessageRelation里的其中一个Group增加一项额外数据item
     add_mrfield_item(GroupName, newKey, newValue) {
-      console.log("要增加item的组为：", GroupName);
-      console.log("要增加的项目为：", newKey, newValue);
+      // console.log("要增加item的组为：", GroupName);
+      // console.log("要增加的项目为：", newKey, newValue);
 
       const businessObject = this.element.businessObject;
       let mrfield_list = businessObject.mrfield_list.$attrs;
@@ -473,9 +470,9 @@ export default {
       for (let i in mrfield_list) {
         if (mrfield_list[i] === GroupName) {
           let mrfield_Keyname = i.split("_")[0];
-          console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
+          // console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
           mrfield_list_item[mrfield_Keyname].$attrs[newKey] = newValue;
-          console.log("增加完成");
+          // console.log("增加完成");
         }
       }
       this.read_MessageRelation();
@@ -483,8 +480,8 @@ export default {
 
     // 适用于Task，删除MessageRelation里的其中一个Group的一项额外数据item
     delete_mrfield_item(GroupName, GroupItem) {
-      console.log("删除项目所在组为：", GroupName);
-      console.log("删除项目的名为：", GroupItem);
+      // console.log("删除项目所在组为：", GroupName);
+      // console.log("删除项目的名为：", GroupItem);
 
       const businessObject = this.element.businessObject;
       let mrfield_list = businessObject.mrfield_list.$attrs;
@@ -493,9 +490,9 @@ export default {
       for (let i in mrfield_list) {
         if (mrfield_list[i] === GroupName) {
           let mrfield_Keyname = i.split("_")[0];
-          console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
+          // console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
           delete mrfield_list_item[mrfield_Keyname].$attrs[GroupItem];
-          console.log("删除完成");
+          // console.log("删除完成");
         }
       }
       this.read_MessageRelation();
@@ -513,7 +510,7 @@ export default {
 
       for (let i in mrfield_list) {
         let mrfield_Keyname = i.split("_")[0];
-        console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
+        // console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
 
         for (let j in mrfield_list_item[mrfield_Keyname].$attrs) {
           if (j === Key) {
@@ -535,7 +532,7 @@ export default {
 
       for (let i in mrfield_list) {
         let mrfield_Keyname = i.split("_")[0];
-        console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
+        // console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
 
         for (let j in mrfield_list_item[mrfield_Keyname].$attrs) {
           if (j === oldKey) {
@@ -558,7 +555,7 @@ export default {
 
       for (let i in mrfield_list) {
         let mrfield_Keyname = i.split("_")[0];
-        console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
+        // console.log("当前的mrfield_Keyname是:", mrfield_Keyname);
 
         for (let j in mrfield_list_item[mrfield_Keyname].$attrs) {
           if (j === Key) {
@@ -570,8 +567,8 @@ export default {
 
     // 修改MessageRelation里的组名
     update_MRField_GroupName(event, key) {
-      console.log("原组名", key);
-      console.log("新组名:", event.target.value);
+      // console.log("原组名", key);
+      // console.log("新组名:", event.target.value);
 
       let newName = event.target.value;
       const businessObject = this.element.businessObject;
@@ -580,7 +577,7 @@ export default {
       for (let i in mrfield_list) {
         if (mrfield_list[i] === key) {
           mrfield_list[i] = newName;
-          console.log("当前的mrfield_Keyname是:", i);
+          // console.log("当前的mrfield_Keyname是:", i);
         }
       }
       this.read_MessageRelation();  // 更新MessageRelation
@@ -597,7 +594,7 @@ export default {
 
       // 检查多实例特性是否存在
       if (!loopCharacteristics) {
-        console.log('该元素没有多实例特性');
+        // console.log('该元素没有多实例特性');
         delete element.businessObject.InstanceNumber;
         delete element.businessObject.EndCondition;
         return false;
@@ -605,7 +602,7 @@ export default {
 
       // 检查多实例特性的类型是否为 bpmn:MultiInstanceLoopCharacteristics
       if (loopCharacteristics.$type !== 'bpmn:MultiInstanceLoopCharacteristics') {
-        console.log('该元素的多实例特性类型不正确');
+        // console.log('该元素的多实例特性类型不正确');
         delete element.businessObject.InstanceNumber;
         delete element.businessObject.EndCondition;
         return false;
@@ -804,11 +801,6 @@ export default {
   padding: 20px;
 }
 
-.empty {
-  height: 200px;
-  line-height: 200px;
-  font-weight: 700;
-}
 
 .element-item {
   padding: 10px;

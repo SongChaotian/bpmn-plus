@@ -4,10 +4,10 @@
     <properties-view v-if="bpmnModeler" :modeler="bpmnModeler"></properties-view>
     <ul class="buttons">
       <li>
-        <a ref="saveDiagram" href="javascript:" title="保存为bpmn">保存为bpmn</a>
+        <a ref="saveDiagram" href="javascript:" title="保存为bpmn">save as BPMN</a>
       </li>
       <li>
-        <a ref="saveSvg" href="javascript:" title="保存为svg">保存为svg</a>
+        <a ref="saveSvg" href="javascript:" title="保存为svg">save as SVG</a>
       </li>
     </ul>
   </div>
@@ -26,7 +26,7 @@ import { xmlStr } from '../mock/xmlStr';   // 引入一个本地的xml字符串
 
 
 export default {
-  name: '',
+  name: 'PropertiesPanel',
   components: {
     PropertiesView  // 自定义的 右侧属性栏
   },
@@ -88,7 +88,7 @@ export default {
       // 给图绑定事件，当图有发生改变就会触发这个事件
       this.bpmnModeler.on('commandStack.changed', function () {
         outer.saveDiagram(function (err, xml) {  // 这里获取到的就是最新的xml信息
-          console.log(xml);  // 将最新的xml信息打印出来
+          // console.log(xml);  // 将最新的xml信息打印出来
           outer.setEncoded(downloadLink, 'diagram.bpmn', err ? null : xml)
         });
         outer.saveSVG(function (err, svg) {
@@ -147,10 +147,10 @@ export default {
           // 将元素信息打印出来，便于调试
           // 常用属性：id， type， businessObject
 
-          console.log("e.element的内容", shape);
-          console.log("id:", shape.id);
-          console.log("type:", shape.type);
-          console.log("businessObject:", shape.businessObject);
+          // console.log("e.element的内容", shape);
+          // console.log("id:", shape.id);
+          // console.log("type:", shape.type);
+          // console.log("businessObject:", shape.businessObject);
 
           /*
           var diagram_element =    // 这个就是e.element
@@ -168,17 +168,14 @@ export default {
           // 将 diagram_element和 BPMN_element 的一些属性关联起来靠的是 businessObject属性，他是一个对象
           // 可以在这个对象中添加一些特殊的属性，并且这些属性是可以直接插到BPMN_element上的
 
-
-
-
           //-------------------------------------调试区---------------------------------------------------------------------------
 
           if (event === 'shape.added') {
-            console.log('新增了shape')
+            // console.log('新增了shape')
           } else if (event === 'shape.move.end') {
-            console.log('移动了shape')
+            // console.log('移动了shape')
           } else if (event === 'shape.removed') {
-            console.log('删除了shape')
+            // console.log('删除了shape')
           }
         })
       })
