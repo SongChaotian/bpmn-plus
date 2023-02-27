@@ -128,14 +128,11 @@
 </template>
 
 <script>
-import { START_EVENT } from 'bpmn-js/lib/features/replace/ReplaceOptions.js';
-import $ from "jquery";
 import Vue from 'vue';
 import {
   append as svgAppend,
-  create as svgCreate,
-  classes as svgClasses
-} from 'tiny-svg'
+  create as svgCreate
+} from 'tiny-svg';
 
 export default {
   name: 'PropertiesView',
@@ -203,14 +200,11 @@ export default {
   methods: {
     init() {
       const { modeler } = this;  // 父组件传递进来的modeler
-      //console.log(modeler)
-      //console.log(START_EVENT)
 
       // selection.changed 监听选中的元素
       modeler.on('selection.changed', e => {
         this.selectedElements = e.newSelection;  // 数组，可能有多个（Windows下按住Ctrl可以选多个元素）
         this.element = e.newSelection[0];  // 默认取第一个
-        // console.log(this.element);
         this.setDefaultProperties();  // 设置一些默认的值
       });
 
@@ -237,7 +231,6 @@ export default {
         const { name } = businessObject;
         if (this.verifyIsEvent(type)) {
           this.eventType = businessObject.eventDefinitions ? businessObject.eventDefinitions[0]['$type'] : ''
-          // console.log(this.eventType)
         } else if (this.verifyIsTask(type)) {
           this.taskType = type
         }
@@ -820,6 +813,6 @@ export default {
 }
 
 .custom-properties-panel label:after {
-  content: ': ';
+  content: '：';
 }
 </style>
