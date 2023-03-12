@@ -99,7 +99,7 @@ npm run serve
 1. I upgraded the bpmn-js version of the project from 6.5.1 to the latest version 11.5.0 and fixed the incompatibility issues between the new and old versions: rewrote some Callbacks functions in bpmn-js to Promises form, referring to the link: [Moving from Callbacks to Promises](https://github.com/bpmn-io/bpmn-io-callbacks-to-promises). The functions that need to be modified in the project are: importXML, saveXML, saveSVG.
 2. Add some initial element examples when initializing the project to give users a preliminary understanding of how to use it
 3. Change the two buttons saveXML and saveSVG added on Feb 23 to icon form
-
+4. In the function of setting colors for BPMN elements, it has been improved from only being able to set the border color to being able to set both the border color and the fill color
 
 
 ### Update Notes (Feb 23)
