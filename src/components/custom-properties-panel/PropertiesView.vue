@@ -10,8 +10,19 @@
     </fieldset>
 
     <fieldset class="element-item">
-      <label>Node Stroke Color</label>
-      <input class="form-control" type="color" :value="element.color" @change="event => onChangeColor(event)" />
+      <label>Set Color</label>
+      <div class="row ms-4">
+        <div class="col-5">
+          <span>fill</span>
+          <input class="form-control" type="color" :value="element.di.fill ? element.di.fill : '#FFFFFF'"
+            @change="event => SetColor(event, 'fill')" />
+        </div>
+        <div class="col-5">
+          <span>stroke</span>
+          <input class="form-control" type="color" :value="element.di.stroke ? element.di.stroke : '#000000'"
+            @change="event => SetColor(event, 'stroke')" />
+        </div>
+      </div>
     </fieldset>
 
     <fieldset class="element-item" v-if="isEvent">
@@ -236,9 +247,6 @@ export default {
         }
         element['name'] = name;  // 同步更新图上的label和自定义属性栏的name
 
-        const Style = businessObject.di;  // 获取element的颜色
-        element.color = Style.stroke ? Style.stroke : "#000000";  // 同步更新自定义属性栏的color
-
         this.ConditionNum = businessObject.ConditionNum;
         this.ConditionTime = businessObject.ConditionTime;
       }
@@ -249,16 +257,7 @@ export default {
       modeling.updateLabel(element, name)
       // 等同于 modeling.updateProperties(element, { name })
     },
-    onChangeColor(event) {  // 改变节点颜色
-      const color = event.target.value;
-      // console.log(color);
-      const { modeler, element } = this;
-      const modeling = modeler.get('modeling');
-      modeling.setColor(element, {
-        fill: null,  // 节点的填充色
-        stroke: color  // 节点边框的颜色和节点label的颜色
-      })
-    },
+
     changeEventType(event) {  // 改变下拉框
       // console.log(event)
       const { modeler, element } = this
@@ -281,7 +280,7 @@ export default {
     },
 
     verifyIsEvent(type) {  // 判断类型是不是event
-      return type.includes('Event')
+      return type.includes('Event') && type !== "bpmn:EventBasedGateway"
     },
 
     verifyIsTask(type) {  // 判断类型是不是task
@@ -730,6 +729,20 @@ export default {
       const ConditionTime_value = event.target.value;
       this.element.businessObject[ConditionTime] = ConditionTime_value;
       this.ConditionTime = ConditionTime_value;
+    },
+
+    /**
+     * 改变结点颜色
+     * @param { Object } event: 事件的类型
+     * @param { String } type: fill:节点的填充色， stroke: 节点边框的颜色和节点label的颜色
+     */
+    SetColor(event, type) {  // 改变节点颜色
+      const color = event.target.value;
+      const { modeler, element } = this;
+      const modeling = modeler.get('modeling');
+      modeling.setColor(element, {
+        [type]: color
+      })
     },
 
     /**

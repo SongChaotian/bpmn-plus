@@ -4,10 +4,14 @@
     <properties-view v-if="bpmnModeler" :modeler="bpmnModeler"></properties-view>
     <ul class="buttons">
       <li>
-        <a ref="saveDiagram" href="javascript:" title="保存为bpmn">save as BPMN</a>
+        <a ref="saveDiagram" href="javascript:" title="Download as BPMN 2.0 file">
+          <img src="../assets/icon_download.png" alt="" style="width:22px; height: 22px">
+        </a>
       </li>
       <li>
-        <a ref="saveSvg" href="javascript:" title="保存为svg">save as SVG</a>
+        <a ref="saveSvg" href="javascript:" title="Download as SVG image">
+          <img src="../assets/icon_picture.jpg" alt="" style="width:22px; height: 22px">
+        </a>
       </li>
     </ul>
   </div>
@@ -41,7 +45,7 @@ export default {
       // bpmn建模器
       bpmnModeler: null,
       container: null,
-      canvas: null
+      canvas: null,
     }
   },
   // 方法集合
@@ -61,16 +65,14 @@ export default {
       this.createNewDiagram();
     },
 
-    createNewDiagram() {
+    async createNewDiagram() {
       // 将字符串转换成图显示出来
-      this.bpmnModeler.importXML(xmlStr, err => {
-        if (err) {
-          // console.error(err)
-        } else {
-          // 这里是成功之后的回调, 可以在这里做一系列事情
-          this.success();
-        }
-      })
+      try {
+        await this.bpmnModeler.importXML(xmlStr);
+        this.success();
+      } catch (err) {
+        console.log(err.message, err.warnings);
+      }
     },
 
     success() {
@@ -80,32 +82,31 @@ export default {
     },
 
     // 添加绑定事件
-    addBpmnListener() {
-      const outer = this;
+    async addBpmnListener() {
       // 获取a标签dom节点
-      const downloadLink = this.$refs.saveDiagram;  // 保存为bpmn的按钮
+      const downloadLink = this.$refs.saveDiagram;  // 保存为xml的按钮
       const downloadSvgLink = this.$refs.saveSvg;  // 保存为svg的按钮
+
       // 给图绑定事件，当图有发生改变就会触发这个事件
-      this.bpmnModeler.on('commandStack.changed', function () {
-        outer.saveDiagram(function (err, xml) {  // 这里获取到的就是最新的xml信息
-          // console.log(xml);  // 将最新的xml信息打印出来
-          outer.setEncoded(downloadLink, 'diagram.bpmn', err ? null : xml)
-        });
-        outer.saveSVG(function (err, svg) {
-          outer.setEncoded(downloadSvgLink, 'diagram.svg', err ? null : svg)
-        });
+      this.bpmnModeler.on('commandStack.changed', async () => {
+        const xml = await this.saveDiagram();
+        console.log(xml);  // 将最新的xml信息打印出来
+        this.setEncoded(downloadLink, 'diagram.bpmn', xml);
+        const svg = await this.saveSVG();
+        this.setEncoded(downloadSvgLink, 'diagram.svg', svg);
       });
     },
 
-    // 下载为bpmn格式,done是个函数，调用的时候传入的
-    saveDiagram(done) {
-      // 把传入的done再传给bpmn原型的saveXML函数调用
-      this.bpmnModeler.saveXML({ format: true }, function (err, xml) {
-        done(err, xml);
-      });
+    // 在saveDiagram和saveSVG中使用Promise而不是回调
+    async saveDiagram() {
+      // 这里获取到的就是最新的xml信息
+      const { xml } = await this.bpmnModeler.saveXML({ format: true });
+      return xml;
     },
-    saveSVG(done) {   // 把传入的done再传给bpmn原型的saveSVG函数调用
-      this.bpmnModeler.saveSVG(done);
+    async saveSVG() {
+      // 这里获取到的就是最新的svg信息
+      const { svg } = await this.bpmnModeler.saveSVG({});
+      return svg;
     },
 
     /**
@@ -115,7 +116,7 @@ export default {
      * @param { string } data - 图的xml
      */
     setEncoded(link, name, data) {
-      const encodedData = encodeURIComponent(data);  // 把xml转换为URI，下载要用到的
+      const encodedData = encodeURIComponent(data);  // 把xml、svg转换为URI，下载要用到的
       // 下载图的具体操作,改变link的属性
       if (data) {
         link.className = 'active';  // className令link标签可点击

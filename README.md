@@ -8,12 +8,12 @@
 <img alt="GitHub stars" src="https://img.shields.io/github/stars/SongChaotian/bpmn-plus?style=flat&logo=github" />
 <img alt="GitHub stars" src="https://img.shields.io/github/forks/SongChaotian/bpmn-plus?style=flat&logo=github" />
 </p>
-
 <p align="center">
 <img src="https://img.shields.io/badge/Bootstrap-5.2.3-brightgreen" alt="" />
-<img src="https://img.shields.io/badge/Bpmn.js-6.5.1-important" alt="" />
+<img src="https://img.shields.io/badge/Bpmn.js-11.5.0-important" alt="" />
 <img src="https://img.shields.io/badge/Vue-2.7.14-critical" alt="" />
 </p>
+
 
 
 
@@ -94,25 +94,23 @@ npm run serve
 
 > The latest update for bpmn-vue-sct
 
+### Update Notes (Mar 12)
 
-
-### Update Notes (Feb 4)
-
-Requirement 2 and Requirement 3 have similar characteristics, therefore, I stored the extended data under businessObject.$attrs to reduce code redundancy and other potential issues.
-
-![](https://raw.githubusercontent.com/SongChaotian/bpmn-plus/main/screenshoot/010.png)
-
-------
+1. I upgraded the bpmn-js version of the project from 6.5.1 to the latest version 11.5.0 and fixed the incompatibility issues between the new and old versions: rewrote some Callbacks functions in bpmn-js to Promises form, referring to the link: [Moving from Callbacks to Promises](https://github.com/bpmn-io/bpmn-io-callbacks-to-promises). The functions that need to be modified in the project are: importXML, saveXML, saveSVG.
+2. Add some initial element examples when initializing the project to give users a preliminary understanding of how to use it
+3. Change the two buttons saveXML and saveSVG added on Feb 23 to icon form
 
 
 
-### Update Notes (Feb 10)
+### Update Notes (Feb 23)
 
-In order to implement Requirement 4, my initial idea was to construct an object and then store objects inside the object. This approach seemed correct, but I encountered many difficulties during the implementation process. Initially, I tried to directly store objects inside the object in JavaScript, and then called the attribute update method. However, the result obtained was obviously incorrect, because "objects cannot be stored directly" in XML. Then, I changed my approach and created a child node to store the data, and then stored the child node in the node. In this way, I was able to achieve the goal of storing objects inside the object from a different perspective.
+I have added two buttons to export modeling elements into BPMN and SVG formats, respectively.
 
-![](https://raw.githubusercontent.com/SongChaotian/bpmn-plus/main/screenshoot/011.png)
 
-------
+
+### Update Notes (Feb 22)
+
+I have implemented Requirement 6 and fixed a bug that occurred when modifying or deleting datafields. The bug was caused by accessing the `mrfield_list` during synchronous update and deletion operations, which led to errors when `mrfield_list` did not exist. The fix was to check for the existence of `mrfield_list` before performing synchronous update or deletion.
 
 
 
@@ -124,17 +122,21 @@ I have completed Requirement 5 and modified the original code for setting colors
 
 
 
-------
+### Update Notes (Feb 10)
+
+In order to implement Requirement 4, my initial idea was to construct an object and then store objects inside the object. This approach seemed correct, but I encountered many difficulties during the implementation process. Initially, I tried to directly store objects inside the object in JavaScript, and then called the attribute update method. However, the result obtained was obviously incorrect, because "objects cannot be stored directly" in XML. Then, I changed my approach and created a child node to store the data, and then stored the child node in the node. In this way, I was able to achieve the goal of storing objects inside the object from a different perspective.
+
+![](https://raw.githubusercontent.com/SongChaotian/bpmn-plus/main/screenshoot/011.png)
 
 
 
-### Update Notes (Feb 22)
-
-I have implemented Requirement 6 and fixed a bug that occurred when modifying or deleting datafields. The bug was caused by accessing the `mrfield_list` during synchronous update and deletion operations, which led to errors when `mrfield_list` did not exist. The fix was to check for the existence of `mrfield_list` before performing synchronous update or deletion.
 
 
+### Update Notes (Feb 4)
 
-### Update Notes (Feb 23)
+Requirement 2 and Requirement 3 have similar characteristics, therefore, I stored the extended data under businessObject.$attrs to reduce code redundancy and other potential issues.
 
-I have added two buttons to export modeling elements into BPMN and SVG formats, respectively.
+![](https://raw.githubusercontent.com/SongChaotian/bpmn-plus/main/screenshoot/010.png)
+
+
 
