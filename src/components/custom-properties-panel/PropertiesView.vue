@@ -14,7 +14,7 @@
       <div class="row ms-4">
         <div class="col-5">
           <span>fill</span>
-          <input class="form-control" type="color" :value="element.di.fill ? element.di.fill : '#FFFFFF'"
+          <input class="form-control" type="color" :value="element.di.fill ? element.di.fill : '#ffffff'"
             @change="event => SetColor(event, 'fill')" />
         </div>
         <div class="col-5">
@@ -259,7 +259,6 @@ export default {
     },
 
     changeEventType(event) {  // 改变下拉框
-      // console.log(event)
       const { modeler, element } = this
       const value = event.target.value;  // 当前下拉框选择的值
       const bpmnReplace = modeler.get('bpmnReplace')
@@ -270,7 +269,6 @@ export default {
       })
     },
     changeTaskType(event) {
-      // console.log(event)
       const { modeler, element } = this
       const value = event.target.value;  // 当前下拉框选择的值
       const bpmnReplace = modeler.get('bpmnReplace')
@@ -397,13 +395,12 @@ export default {
     // 适用于Task，增加一个MessageRelation的Group
     add_mrfield_group() {
       let newGroupItem = 0;
-      // console.log("增加一个组");
       const { modeler, element } = this;
       const bpmnFactory = modeler.get('bpmnFactory');
       const businessObject = element.businessObject;
 
       if (!businessObject.mrfield_list) {  // 如果元素没有MessageRelation的话，给他开个新的
-        let mrfield_list = bpmnFactory.create('mrfields:MRField_item_list', {});
+        let mrfield_list = bpmnFactory.create('mrfields:mrfield_list', {});
         businessObject.mrfield_list = mrfield_list;
       }
 
@@ -422,7 +419,7 @@ export default {
         }
       }
 
-      let NewMrfieldGroup = bpmnFactory.create('mrfields:MRField_item', {});  // 创建子元素
+      let NewMrfieldGroup = bpmnFactory.create(`mrfields:mrfield${newGroupItem}`, {});  // 创建子元素
       businessObject.mrfield_list[`mrfield${newGroupItem}`] = NewMrfieldGroup;
       businessObject.mrfield_list.$attrs[`mrfield${newGroupItem}_name`] = `group${newGroupItem}`;
 
@@ -432,7 +429,6 @@ export default {
     // 适用于Task，删除一个MessageRelation的Group
     delete_mrfield_group(GroupName) {
       // console.log("删除组的名为：", GroupName);
-
       const businessObject = this.element.businessObject;
       let mrfield_list = businessObject.mrfield_list.$attrs;
       let mrfield_list_item = businessObject.mrfield_list;

@@ -1,8 +1,15 @@
 <template>
-  <div class="containers" ref="content">
+  <div class="containers" ref="content" tabindex="0">
     <div class="canvas" ref="canvas"></div>
     <properties-view v-if="bpmnModeler" :modeler="bpmnModeler"></properties-view>
     <ul class="buttons">
+      <li>
+        <a href="javascript:" id="file-upload" title="open BPMN diagram from local file system" class="active">
+          <img src="../assets/icon_upload.png" alt="" style="width:22px; height: 22px">
+          <input type="file" id="file-input" style="display:none;">
+        </a>
+
+      </li>
       <li>
         <a ref="saveDiagram" href="javascript:" title="Download as BPMN 2.0 file">
           <img src="../assets/icon_download.png" alt="" style="width:22px; height: 22px">
@@ -27,7 +34,7 @@ import MRfieldDescriptor from '../descriptors/mrfield';  // 自定义的右侧�
 import MultiInstanceDescriptor from '../descriptors/MultiInstance';
 
 import { xmlStr } from '../mock/xmlStr';   // 引入一个本地的xml字符串
-
+import $ from 'jquery';
 
 export default {
   name: 'PropertiesPanel',
@@ -46,6 +53,12 @@ export default {
       bpmnModeler: null,
       container: null,
       canvas: null,
+      xmlStr: xmlStr,
+      xmlStatus_Undo: [],
+      xmlStatus_Redo: [],
+      selectedElements: [],  // 当前选择的元素集合
+      element: null,  // 当前点击的元素
+      pressed_keys: new Set(),  // 按键去重
     }
   },
   // 方法集合
@@ -68,7 +81,7 @@ export default {
     async createNewDiagram() {
       // 将字符串转换成图显示出来
       try {
-        await this.bpmnModeler.importXML(xmlStr);
+        await this.bpmnModeler.importXML(this.xmlStr);
         this.success();
       } catch (err) {
         console.log(err.message, err.warnings);
@@ -78,7 +91,93 @@ export default {
     success() {
       // 给图绑定事件，当图有发生改变就会触发这个事件
       this.addBpmnListener();     // 保存图片、bpmn文件用
-      this.addModelerListener();   // 监听modeler并绑定事件
+      this.addEventBusListener();  // 监听element并绑定事件
+      this.uploadXML();  // 导入XML文件
+      this.addkeyboardListener();  // 加入键盘监听
+    },
+
+    uploadXML() {
+      const outer = this;
+      document.getElementById('file-upload').addEventListener('click', () => {
+        document.getElementById('file-input').click();
+      });
+
+      document.getElementById('file-input').addEventListener('change', () => {
+        const input = document.getElementById('file-input');
+        const file = input.files[0];
+
+        // 如果用户在上传文件的时候点了取消，即文件为空时，或者上传的不是bpmn文件，则直接返回
+        if (!file || file.name.split('.')[1] !== 'bpmn') {
+          alert("上传文件格式有误, 请上传xml格式的bpmn文件");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.readAsText(file);
+        reader.onload = async () => {
+          const xml = reader.result;
+          await outer.bpmnModeler.importXML(xml);
+          outer.xmlStr = xml;
+        };
+      });
+    },
+
+    addkeyboardListener() {
+      const outer = this;
+      document.addEventListener('keydown', e => {
+        e.preventDefault();  // 禁用浏览器的默认快捷键行为
+      })
+
+      const $canvas = $('.containers');
+      $canvas.keydown(function (e) {  // 键盘按住时（不松起）
+        outer.pressed_keys.add(e.key);
+        outer.KeyboardShortcuts();
+      });
+
+      $canvas.keyup(function (e) {  // 键盘松开时
+        outer.pressed_keys.delete(e.key);
+      });
+    },
+
+    async KeyboardShortcuts() {
+      const modeling = this.bpmnModeler.get('modeling');
+      // console.log(this.pressed_keys);
+      if (this.pressed_keys.has('Control')) {
+        if (this.pressed_keys.has('Shift')) {
+          if (this.pressed_keys.has('z') || this.pressed_keys.has('Z')) {
+            if (this.xmlStatus_Redo.length == 0) return;
+            let xml = this.xmlStatus_Redo.pop();  // 从Redo中取出需要重做的xml的状态
+            await this.bpmnModeler.importXML(xml);
+            this.xmlStatus_Undo.push(this.xmlStr);
+            this.xmlStr = xml;  // 更新当前xml状态
+            // 防止大小字母卡键
+            this.pressed_keys.delete('z');
+            this.pressed_keys.delete('Z');
+            return;
+          }
+        } else if (this.pressed_keys.has('z') || this.pressed_keys.has('Z')) {
+          if (this.xmlStatus_Undo.length == 0) return;
+          let xml = this.xmlStatus_Undo.pop();  // 从Undo取出上一次xml的状态
+          await this.bpmnModeler.importXML(xml);
+          this.xmlStatus_Redo.push(this.xmlStr);  // 加入Redo的栈中
+          this.xmlStr = xml;  // 更新当前xml状态
+          // 防止大小字母卡键
+          this.pressed_keys.delete('z');
+          this.pressed_keys.delete('Z');
+          return;
+        }
+      } else if (this.pressed_keys.has('Delete')) {
+        modeling.removeElements(this.selectedElements);
+        return;
+      }
+    },
+
+    // 监听选中的element
+    addEventBusListener() {
+      this.bpmnModeler.on('selection.changed', e => {
+        this.selectedElements = e.newSelection;  // 数组，可能有多个（Windows下按住Ctrl可以选多个元素）
+        this.element = e.newSelection[0];  // 默认取第一个
+      });
     },
 
     // 添加绑定事件
@@ -89,9 +188,11 @@ export default {
 
       // 给图绑定事件，当图有发生改变就会触发这个事件
       this.bpmnModeler.on('commandStack.changed', async () => {
-        const xml = await this.saveDiagram();
-        console.log(xml);  // 将最新的xml信息打印出来
-        this.setEncoded(downloadLink, 'diagram.bpmn', xml);
+        const newXml = await this.saveDiagram();
+        this.xmlStatus_Undo.push(this.xmlStr);  // 将old的xml状态压入栈中
+        this.xmlStr = newXml;  // 更新当前xml的状态
+        // console.log(xml);  // 将最新的xml信息打印出来
+        this.setEncoded(downloadLink, 'diagram.bpmn', newXml);
         const svg = await this.saveSVG();
         this.setEncoded(downloadSvgLink, 'diagram.svg', svg);
       });
@@ -124,63 +225,6 @@ export default {
         link.download = name;  // download是下载的文件的名字
       }
     },
-
-    addModelerListener() {
-      // 监听 modeler
-      const bpmnjs = this.bpmnModeler;
-      const outer = this;
-
-      // 'shape.removed', 'connect.end', 'connect.move'
-      const events = [  // 事件类型
-        'shape.added',      // 新增一个shape之后触发;
-        'shape.move.end',   // 移动完一个shape之后触发;
-        'shape.removed',    // 删除一个shape之后触发
-      ];
-
-      events.forEach(function (event) {  // 用forEach给modeler上添加要绑定的事件
-        outer.bpmnModeler.on(event, e => {
-          var elementRegistry = bpmnjs.get('elementRegistry');  // 获取Shape信息
-          // 理论上 e.element === elementRegistry.get(e.element.id)
-          // e.element 和 elementRegistry.get(e.element.id)得到的结果是同样的，但是官方是推荐使用elementRegistry的方式.
-          var shape = e.element ? elementRegistry.get(e.element.id) : e.shape;
-
-          //-------------------------------------调试区---------------------------------------------------------------------
-          // 将元素信息打印出来，便于调试
-          // 常用属性：id， type， businessObject
-
-          // console.log("e.element的内容", shape);
-          // console.log("id:", shape.id);
-          // console.log("type:", shape.type);
-          // console.log("businessObject:", shape.businessObject);
-
-          /*
-          var diagram_element =    // 这个就是e.element
-          {
-            id: "StartEvent_1y45yut",
-            type: "bpmn:StartEvent",
-            businessObject: {
-              $type: "bpmn:StartEvent",
-              id: "StartEvent_1y45yut",
-              name: "开始"
-            }
-          }
-          var BPMN_element = `<startEvent id="StartEvent_1y45yut" name="开始"></startEvent>`  // 这个是bpmn文件的xml格式
-          */
-          // 将 diagram_element和 BPMN_element 的一些属性关联起来靠的是 businessObject属性，他是一个对象
-          // 可以在这个对象中添加一些特殊的属性，并且这些属性是可以直接插到BPMN_element上的
-
-          //-------------------------------------调试区---------------------------------------------------------------------------
-
-          if (event === 'shape.added') {
-            // console.log('新增了shape')
-          } else if (event === 'shape.move.end') {
-            // console.log('移动了shape')
-          } else if (event === 'shape.removed') {
-            // console.log('删除了shape')
-          }
-        })
-      })
-    },
   },
   // 计算属性
   computed: {}
@@ -192,6 +236,11 @@ export default {
   background-color: #ffffff;
   width: 100%;
   height: calc(100vh - 52px);
+}
+
+/* 画布聚焦时隐藏外面的框框 */
+.containers:focus {
+  outline: none;
 }
 
 .canvas {

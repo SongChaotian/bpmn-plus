@@ -94,12 +94,37 @@ npm run serve
 
 > The latest update for bpmn-vue-sct
 
+### Update Notes (Mar 15)
+
+1. Add the function to import local BPMN files.
+
+   Importing local BPMN files is very simple and can be done in 2 steps:
+
+   Step1：Click on the icon in the bottom left corner that looks like a folder.
+
+   ![](https://raw.githubusercontent.com/SongChaotian/bpmn-plus/main/screenshoot/Mar12_01.png)
+
+   Step2：Upload the local BPMN file and it will be successfully imported.
+
+   ![](https://raw.githubusercontent.com/SongChaotian/bpmn-plus/main/screenshoot/Mar12_02.png)
+
+2. Add three keyboard shortcuts:
+
+   ①`Delete`：Delete the selected element.
+
+   ②`Ctrl+z`：Undo the last operation.
+
+   ③`Ctrl+Shift+z`：Redo the last operation that was undone.
+
+   
+
 ### Update Notes (Mar 12)
 
 1. I upgraded the bpmn-js version of the project from 6.5.1 to the latest version 11.5.0 and fixed the incompatibility issues between the new and old versions: rewrote some Callbacks functions in bpmn-js to Promises form, referring to the link: [Moving from Callbacks to Promises](https://github.com/bpmn-io/bpmn-io-callbacks-to-promises). The functions that need to be modified in the project are: importXML, saveXML, saveSVG.
 2. Add some initial element examples when initializing the project to give users a preliminary understanding of how to use it
 3. Change the two buttons saveXML and saveSVG added on Feb 23 to icon form
 4. In the function of setting colors for BPMN elements, it has been improved from only being able to set the border color to being able to set both the border color and the fill color
+
 
 
 ### Update Notes (Feb 23)
