@@ -1,6 +1,6 @@
 <template>
-  <div class="containers" ref="content" tabindex="0">
-    <div class="canvas" ref="canvas"></div>
+  <div class="containers" ref="content">
+    <div class="canvas" ref="canvas" tabindex="0"></div>
     <properties-view v-if="bpmnModeler" :modeler="bpmnModeler"></properties-view>
     <ul class="buttons">
       <li>
@@ -124,25 +124,23 @@ export default {
 
     addkeyboardListener() {
       const outer = this;
-      document.addEventListener('keydown', e => {
-        e.preventDefault();  // 禁用浏览器的默认快捷键行为
-      })
 
-      const $canvas = $('.containers');
-      $canvas.keydown(function (e) {  // 键盘按住时（不松起）
+      const $canvas = $('.canvas');
+      $canvas.keydown(e => {  // 键盘按住时（不松起）
         outer.pressed_keys.add(e.key);
-        outer.KeyboardShortcuts();
+        outer.KeyboardShortcuts(e);
       });
 
-      $canvas.keyup(function (e) {  // 键盘松开时
+      $canvas.keyup(e => {  // 键盘松开时
         outer.pressed_keys.delete(e.key);
       });
     },
 
-    async KeyboardShortcuts() {
+    async KeyboardShortcuts(e) {
       const modeling = this.bpmnModeler.get('modeling');
       // console.log(this.pressed_keys);
       if (this.pressed_keys.has('Control')) {
+        e.preventDefault();  // 如果按了Ctrl就禁用浏览器的默认快捷键行为
         if (this.pressed_keys.has('Shift')) {
           if (this.pressed_keys.has('z') || this.pressed_keys.has('Z')) {
             if (this.xmlStatus_Redo.length == 0) return;
@@ -168,6 +166,7 @@ export default {
         }
       } else if (this.pressed_keys.has('Delete')) {
         modeling.removeElements(this.selectedElements);
+        this.pressed_keys.delete('Delete');
         return;
       }
     },
@@ -238,14 +237,14 @@ export default {
   height: calc(100vh - 52px);
 }
 
-/* 画布聚焦时隐藏外面的框框 */
-.containers:focus {
-  outline: none;
-}
-
 .canvas {
   width: 100%;
   height: 100%;
+}
+
+/* 画布聚焦时隐藏外面的框框 */
+.canvas:focus {
+  outline: none;
 }
 
 .panel {
