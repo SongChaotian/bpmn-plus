@@ -51,7 +51,7 @@
         <option v-for="option in EndConditionTypes" :key="option.value" :value="option.value">{{ option.label }}
         </option>
       </select>
-      <fieldset class="element-item mt-2" v-if="EndConditionType === 'MessageNum' || EndConditionType === 'Race'">
+      <fieldset class="element-item mt-2" v-if="EndConditionType === 'Number' || EndConditionType === 'Race'">
         <label>ConditionNum</label>
         <input class="form-control" :value="ConditionNum ? ConditionNum : InstanceNumber"
           @change="event => update_ConditionNum(event, 'ConditionNum')" />
@@ -196,7 +196,7 @@ export default {
       InstanceNumber: null,
       EndConditionTypes: [
         { label: '', value: '' },
-        { label: 'MessageNum', value: 'MessageNum' },
+        { label: 'Number', value: 'Number' },
         { label: 'Time', value: 'Time' },
         { label: 'Race', value: 'Race' },
       ],
@@ -680,7 +680,7 @@ export default {
       const bounds = gfx.getBBox();  // 获取图形的边界框
 
       let img = null;   // 要绘制的图像
-      if (EndCondition === "MessageNum") {
+      if (EndCondition === "Number") {
         img = 'https://static.thenounproject.com/png/487908-200.png';
       } else if (EndCondition === "Time") {
         img = 'https://static.thenounproject.com/png/5334445-200.png';

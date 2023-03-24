@@ -17,7 +17,7 @@
 
 
 
-This project is abut BPMN properties extension , and based on BPMN.js and Vue implementation. Specific initialization is shown as follow:
+This project is abut BPMN properties extension , and based on BPMN.js and Vue implementation. The project has been deployed on a cloud server. [Click here to access it.](http://124.71.159.213:10086/custom-properties-panel)Specific initialization is shown as follow:
 
 ![](https://raw.githubusercontent.com/SongChaotian/bpmn-plus/main/screenshoot/001.png)
 
@@ -94,6 +94,32 @@ npm run serve
 
 > The latest update for bpmn-vue-sct
 
+### Update Notes (Mar 24)
+
+1. The system has added a new feature to create a new canvas. Users can operate by following the steps shown in the figure below and click the button to create a new canvas.
+
+   ![](https://raw.githubusercontent.com/SongChaotian/bpmn-plus/main/screenshoot/Mar24_01.png)
+
+   The new canvas looks as shown in the following figure:
+
+   ![](https://raw.githubusercontent.com/SongChaotian/bpmn-plus/main/screenshoot/Mar24_02.png)
+
+2. The system has added keyboard shortcuts for copying and pasting.
+
+   ①`Ctrl+c`: Selecting an element and pressing this shortcut will copy the element, including its `type` and attributes stored in the element.
+
+   ②`Ctrl+v`: Paste the copied element. The pasting location is determined by the user's mouse click in the canvas.
+
+3. The system has fixed the issue of incomplete element deletion when using the `delete` shortcut to delete multiple selected elements.
+
+4. The system has fixed the issue of being unable to download BPMN files from the initial interface.
+
+5. The system has fixed the issue of being unresponsive when uploading a BPMN file with the same file name.
+
+6. The system has added a rule: after creating a new canvas or importing a new BPMN file from the local device, using `ctrl+z` to undo the previous operation is not allowed to return to the previous canvas interface. In other words, the undo operation can only undo to the state after the new canvas is created.
+
+
+
 ### Update Notes (Mar 15)
 
 1. Add the function to import local BPMN files.
@@ -102,11 +128,11 @@ npm run serve
 
    Step1：Click on the icon in the bottom left corner that looks like a folder.
 
-   ![](https://raw.githubusercontent.com/SongChaotian/bpmn-plus/main/screenshoot/Mar12_01.png)
+   ![](https://raw.githubusercontent.com/SongChaotian/bpmn-plus/main/screenshoot/Mar15_01.png)
 
    Step2：Upload the local BPMN file and it will be successfully imported.
 
-   ![](https://raw.githubusercontent.com/SongChaotian/bpmn-plus/main/screenshoot/Mar12_02.png)
+   ![](https://raw.githubusercontent.com/SongChaotian/bpmn-plus/main/screenshoot/Mar15_02.png)
 
 2. Add three keyboard shortcuts:
 

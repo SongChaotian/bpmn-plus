@@ -8,15 +8,19 @@
           <img src="../assets/icon_upload.png" alt="" style="width:22px; height: 22px">
           <input type="file" id="file-input" style="display:none;">
         </a>
-
       </li>
       <li>
-        <a ref="saveDiagram" href="javascript:" title="Download as BPMN 2.0 file">
+        <a href="javascript:" id="carete-new-bpmn" title="create new BPMN diagram" class="active">
+          <img src="../assets/icon_create.png" alt="" style="width:22px; height: 22px">
+        </a>
+      </li>
+      <li>
+        <a ref="saveDiagram" href="javascript:" id="download-bpmn" class="active" title="Download as BPMN 2.0 file">
           <img src="../assets/icon_download.png" alt="" style="width:22px; height: 22px">
         </a>
       </li>
       <li>
-        <a ref="saveSvg" href="javascript:" title="Download as SVG image">
+        <a ref="saveSvg" href="javascript:" id="download-svg" class="active" title="Download as SVG image">
           <img src="../assets/icon_picture.jpg" alt="" style="width:22px; height: 22px">
         </a>
       </li>
@@ -34,6 +38,7 @@ import MRfieldDescriptor from '../descriptors/mrfield';  // 自定义的右侧�
 import MultiInstanceDescriptor from '../descriptors/MultiInstance';
 
 import { xmlStr } from '../mock/xmlStr';   // 引入一个本地的xml字符串
+import { NewxmlStr } from '../mock/NewxmlStr';   // 引入一个本地的xml字符串
 import $ from 'jquery';
 
 export default {
@@ -58,6 +63,7 @@ export default {
       xmlStatus_Redo: [],
       selectedElements: [],  // 当前选择的元素集合
       element: null,  // 当前点击的元素
+      CopyElement: {},  // Ctrl+c准备复制的元素
       pressed_keys: new Set(),  // 按键去重
     }
   },
@@ -93,9 +99,17 @@ export default {
       this.addBpmnListener();     // 保存图片、bpmn文件用
       this.addEventBusListener();  // 监听element并绑定事件
       this.uploadXML();  // 导入XML文件
+      this.addbtn2createNewBpmnDiagram();  // 创建新的BPMN Diagram
       this.addkeyboardListener();  // 加入键盘监听
     },
-
+    addbtn2createNewBpmnDiagram() {
+      $('#carete-new-bpmn').on('click', async e => {
+        await this.bpmnModeler.importXML(NewxmlStr);
+        this.xmlStr = NewxmlStr;
+        this.xmlStatus_Undo.length = 0;
+        this.xmlStatus_Redo.length = 0;
+      });
+    },
     uploadXML() {
       const outer = this;
       document.getElementById('file-upload').addEventListener('click', () => {
@@ -105,6 +119,7 @@ export default {
       document.getElementById('file-input').addEventListener('change', () => {
         const input = document.getElementById('file-input');
         const file = input.files[0];
+        input.value = '';    // 重置输入字段,使得上传相同文件名的文件时也会有响应
 
         // 如果用户在上传文件的时候点了取消，即文件为空时，或者上传的不是bpmn文件，则直接返回
         if (!file || file.name.split('.')[1] !== 'bpmn') {
@@ -118,6 +133,8 @@ export default {
           const xml = reader.result;
           await outer.bpmnModeler.importXML(xml);
           outer.xmlStr = xml;
+          outer.xmlStatus_Undo.length = 0;
+          outer.xmlStatus_Redo.length = 0;
         };
       });
     },
@@ -136,37 +153,96 @@ export default {
       });
     },
 
+    /**
+     * 删除传入的一个key列表
+     * @param {List} keys : 传入的keys是一个key列表
+     */
+    deletePressed_keys(keys) {
+      for (let key of keys) {
+        this.pressed_keys.delete(key);
+      }
+    },
+    // 键盘快捷键操作函数
     async KeyboardShortcuts(e) {
       const modeling = this.bpmnModeler.get('modeling');
+      const elementFactory = this.bpmnModeler.get('elementFactory');
+      const bpmnFactory = this.bpmnModeler.get('bpmnFactory');
+      const create = this.bpmnModeler.get('create');
+
       // console.log(this.pressed_keys);
       if (this.pressed_keys.has('Control')) {
         e.preventDefault();  // 如果按了Ctrl就禁用浏览器的默认快捷键行为
         if (this.pressed_keys.has('Shift')) {
-          if (this.pressed_keys.has('z') || this.pressed_keys.has('Z')) {
-            if (this.xmlStatus_Redo.length == 0) return;
+          if (this.pressed_keys.has('z') || this.pressed_keys.has('Z')) {  // Ctrl+Shift+z: Redo
+            if (this.xmlStatus_Redo.length == 0) {
+              this.deletePressed_keys(['z', 'Z']);
+              return;
+            }
             let xml = this.xmlStatus_Redo.pop();  // 从Redo中取出需要重做的xml的状态
             await this.bpmnModeler.importXML(xml);
             this.xmlStatus_Undo.push(this.xmlStr);
             this.xmlStr = xml;  // 更新当前xml状态
-            // 防止大小字母卡键
-            this.pressed_keys.delete('z');
-            this.pressed_keys.delete('Z');
+            this.deletePressed_keys(['z', 'Z']);
             return;
           }
-        } else if (this.pressed_keys.has('z') || this.pressed_keys.has('Z')) {
-          if (this.xmlStatus_Undo.length == 0) return;
+        } else if (this.pressed_keys.has('z') || this.pressed_keys.has('Z')) {  // Ctrl+z: Undo
+          if (this.xmlStatus_Undo.length == 0) {
+            this.deletePressed_keys(['z', 'Z']);
+            return;
+          }
           let xml = this.xmlStatus_Undo.pop();  // 从Undo取出上一次xml的状态
           await this.bpmnModeler.importXML(xml);
           this.xmlStatus_Redo.push(this.xmlStr);  // 加入Redo的栈中
           this.xmlStr = xml;  // 更新当前xml状态
-          // 防止大小字母卡键
-          this.pressed_keys.delete('z');
-          this.pressed_keys.delete('Z');
+          this.deletePressed_keys(['z', 'Z']);
+          return;
+        } else if (this.pressed_keys.has('c') || this.pressed_keys.has('C')) {  // Ctrl+c: Copy
+          if (!this.element || this.element.type === "bpmn:SequenceFlow" || this.element.type === "label") {
+            this.deletePressed_keys(['c', 'C']);
+            return;
+          }
+          let { type, businessObject } = this.element;
+          this.CopyElement = {
+            "type": type,
+            "businessObject": businessObject,
+          }
+          // console.log("ctrl+c, 将当前选中的element复制下来:", this.CopyElement);
+          this.deletePressed_keys(['c', 'C']);
+          return;
+        } else if (this.pressed_keys.has('v') || this.pressed_keys.has('V')) {  // Ctrl+v: Paste
+          if (!this.CopyElement['type']) {
+            this.deletePressed_keys(['v', 'V']);
+            return;
+          }
+          const type = this.CopyElement['type'];
+          const { name, mrfield_list, $attrs } = this.CopyElement['businessObject'];
+          const businessObject = bpmnFactory.create(type, { ...$attrs });
+          businessObject['name'] = name;
+          if (mrfield_list) {
+            businessObject['mrfield_list'] = mrfield_list;
+          }
+          const shape = elementFactory.createShape({
+            type: type,
+            businessObject
+          });
+          const event = new MouseEvent("click", {  // 创建一个鼠标点击事件对象
+            view: window,
+            bubbles: true,
+            cancelable: true
+          });
+
+          create.start(event, shape);
+          this.deletePressed_keys(['v', 'V']);
           return;
         }
       } else if (this.pressed_keys.has('Delete')) {
-        modeling.removeElements(this.selectedElements);
-        this.pressed_keys.delete('Delete');
+        if (this.selectedElements.length == 0) {
+          this.deletePressed_keys(['Delete']);
+          return;
+        }
+        let deleteElementList = [...this.selectedElements];  // 把所有选中的元素加入待删除的List中
+        modeling.removeElements(deleteElementList);
+        this.deletePressed_keys(['Delete']);
         return;
       }
     },
@@ -176,25 +252,32 @@ export default {
       this.bpmnModeler.on('selection.changed', e => {
         this.selectedElements = e.newSelection;  // 数组，可能有多个（Windows下按住Ctrl可以选多个元素）
         this.element = e.newSelection[0];  // 默认取第一个
+        // console.log("当前点击的元素:", this.element);
       });
     },
 
     // 添加绑定事件
     async addBpmnListener() {
-      // 获取a标签dom节点
-      const downloadLink = this.$refs.saveDiagram;  // 保存为xml的按钮
-      const downloadSvgLink = this.$refs.saveSvg;  // 保存为svg的按钮
-
       // 给图绑定事件，当图有发生改变就会触发这个事件
       this.bpmnModeler.on('commandStack.changed', async () => {
         const newXml = await this.saveDiagram();
+        // console.log("xml更新");  // 将最新的xml信息打印出来
         this.xmlStatus_Undo.push(this.xmlStr);  // 将old的xml状态压入栈中
         this.xmlStr = newXml;  // 更新当前xml的状态
-        // console.log(xml);  // 将最新的xml信息打印出来
-        this.setEncoded(downloadLink, 'diagram.bpmn', newXml);
+      });
+
+      // 获取a标签dom节点
+      const downloadBPMNLink = this.$refs.saveDiagram;  // 保存为xml的按钮
+      const downloadSvgLink = this.$refs.saveSvg;  // 保存为svg的按钮
+      $('#download-bpmn').on('click', async () => {
+        const newXml = await this.saveDiagram();
+        this.setEncoded(downloadBPMNLink, 'diagram.bpmn', newXml);
+      })
+
+      $('#download-svg').on('click', async () => {
         const svg = await this.saveSVG();
         this.setEncoded(downloadSvgLink, 'diagram.svg', svg);
-      });
+      })
     },
 
     // 在saveDiagram和saveSVG中使用Promise而不是回调
