@@ -1,6 +1,8 @@
 <template>
   <div class="containers" ref="content">
-    <div class="canvas" ref="canvas" tabindex="0"></div>
+
+    <div class="canvas" id="drop_zone" ref="canvas" tabindex="0"></div>
+
     <properties-view v-if="bpmnModeler" :modeler="bpmnModeler"></properties-view>
     <ul class="buttons">
       <li>
@@ -33,16 +35,16 @@
 // import BpmnViewer from 'bpmn-js'
 import BpmnModeler from 'bpmn-js/lib/Modeler';  // 这个用来建模
 import PropertiesView from './custom-properties-panel/PropertiesView';  // 自定义的 右侧属性栏 (框+内容)
-
+import customPaletteAndRenderer from './custom-palette-renderer/index.js';  // 自定义左侧工具栏元素 + 渲染
 import MRfieldDescriptor from '../descriptors/mrfield';  // 自定义的右侧扩展属性描述json
 import MultiInstanceDescriptor from '../descriptors/MultiInstance';
-
+import CustomElementDescriptor from '../descriptors/customElement';
 import { xmlStr } from '../mock/xmlStr';   // 引入一个本地的xml字符串
 import { NewxmlStr } from '../mock/NewxmlStr';   // 引入一个本地的xml字符串
 import $ from 'jquery';
 
 export default {
-  name: 'PropertiesPanel',
+  name: 'BpmnPlus',
   components: {
     PropertiesView  // 自定义的 右侧属性栏
   },
@@ -76,9 +78,13 @@ export default {
       // 建模
       this.bpmnModeler = new BpmnModeler({
         container: canvas,
+        additionalModules: [  // 自定义左侧工具栏元素 + 渲染
+          customPaletteAndRenderer
+        ],
         moddleExtensions: {  // 自定义的维护属性面板中的属性
           MRfield: MRfieldDescriptor,
-          MultiInstance: MultiInstanceDescriptor
+          MultiInstance: MultiInstanceDescriptor,
+          CustomElement: CustomElementDescriptor
         }
       });
       this.createNewDiagram();
@@ -101,7 +107,48 @@ export default {
       this.uploadXML();  // 导入XML文件
       this.addbtn2createNewBpmnDiagram();  // 创建新的BPMN Diagram
       this.addkeyboardListener();  // 加入键盘监听
+      this.addDropListener();  // 加入拖放文件监听
     },
+    addDropListener() {
+      const outer = this;
+      // 获取要接受拖放的区域元素
+      const dropZone = document.getElementById('drop_zone');
+
+      // 绑定拖放事件
+      dropZone.addEventListener('dragover', handleDragOver, false);
+      dropZone.addEventListener('drop', handleFileSelect, false);
+
+      function handleDragOver(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy'; // 设置拖放效果为拷贝
+      }
+
+      function handleFileSelect(event) {
+        event.stopPropagation();
+        event.preventDefault();
+
+        const files = event.dataTransfer.files; // 获取拖放的文件列表
+        if (files.length > 0) {
+          const file = files[0];
+          if (file.name.split('.')[1] !== 'bpmn') { // 如果上传的不是bpmn文件，则直接返回
+            alert("上传文件格式有误, 请上传xml格式的bpmn文件");
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.readAsText(file); // 读取文件内容
+          reader.onload = async () => {
+            const xml = reader.result;
+            await outer.bpmnModeler.importXML(xml);
+            outer.xmlStr = xml;
+            outer.xmlStatus_Undo.length = 0;
+            outer.xmlStatus_Redo.length = 0;
+          };
+        }
+      }
+    },
+
     addbtn2createNewBpmnDiagram() {
       $('#carete-new-bpmn').on('click', async e => {
         await this.bpmnModeler.importXML(NewxmlStr);
@@ -128,7 +175,7 @@ export default {
         }
 
         const reader = new FileReader();
-        reader.readAsText(file);
+        reader.readAsText(file);  // 读取文件内容
         reader.onload = async () => {
           const xml = reader.result;
           await outer.bpmnModeler.importXML(xml);
@@ -215,12 +262,31 @@ export default {
             return;
           }
           const type = this.CopyElement['type'];
-          const { name, mrfield_list, $attrs } = this.CopyElement['businessObject'];
+          const { name, mrfield_list, $attrs, CustomElement, loopCharacteristics, InstanceNumber, EndCondition, ConditionNum, ConditionTime } = this.CopyElement['businessObject'];
           const businessObject = bpmnFactory.create(type, { ...$attrs });
           businessObject['name'] = name;
           if (mrfield_list) {
             businessObject['mrfield_list'] = mrfield_list;
           }
+          if (CustomElement) {
+            businessObject['CustomElement'] = CustomElement;
+          }
+          if (loopCharacteristics) {
+            businessObject['loopCharacteristics'] = loopCharacteristics;
+          }
+          if (InstanceNumber) {
+            businessObject['InstanceNumber'] = InstanceNumber;
+          }
+          if (EndCondition) {
+            businessObject['EndCondition'] = EndCondition;
+          }
+          if (ConditionNum) {
+            businessObject['ConditionNum'] = ConditionNum;
+          }
+          if (ConditionTime) {
+            businessObject['ConditionTime'] = ConditionTime;
+          }
+
           const shape = elementFactory.createShape({
             type: type,
             businessObject

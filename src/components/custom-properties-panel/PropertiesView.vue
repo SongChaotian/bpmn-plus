@@ -45,7 +45,7 @@
         @change="event => update_InstanceNuber(event, 'InstanceNumber')" />
     </fieldset>
 
-    <fieldset class="element-item" v-if="isMultiInstance">
+    <fieldset class="element-item" v-if="isMultiReceiveTask">
       <label>EndCondition</label>
       <select class="form-select" @change="changeEndConditionType" :value="EndConditionType">
         <option v-for="option in EndConditionTypes" :key="option.value" :value="option.value">{{ option.label }}
@@ -63,11 +63,11 @@
       </fieldset>
     </fieldset>
 
-    <div class="card mt-2" v-if="isDataStoreReference || isDataObjectReference || isTask">
+    <div class="card mt-2" v-if="isDataReference || isSendOrReceiveTask">
       <div class="card-body">
         <div class="card-title">
-          <label v-if="isDataStoreReference || isDataObjectReference">Add Data Field</label>
-          <label v-if="isTask">Add Message Field</label>
+          <label v-if="isDataReference">Add Data Field</label>
+          <label v-if="isSendOrReceiveTask">Add Message Field</label>
           <div class="btn btn-outline-primary btn-sm ms-2" @click="add_expansion_data">+</div>
         </div>
         <div class="card-text">
@@ -88,7 +88,7 @@
       </div>
     </div>
 
-    <div class="card mt-2" v-if="isTask">
+    <div class="card mt-2" v-if="isSendOrReceiveTask">
       <div class="card-body">
         <div class="card-title">
           <label>Add MessageRelation</label>
@@ -178,20 +178,6 @@ export default {
 
       key_id: 1,
       DataFields_dict: {},
-      // MRField_dict: {
-      //   "group1": {
-      //     "Team1": "阿根廷",
-      //     "Team2": "法国",
-      //   },
-      //   "group2": {
-      //     "Team3": "克罗地亚",
-      //     "Team4": "摩洛哥",
-      //   },
-      //   "group3": {
-      //     "Team2": "法国",
-      //     "Team3": "克罗地亚",
-      //   },
-      // },
       MRField_dict: {},
       InstanceNumber: null,
       EndConditionTypes: [
@@ -283,22 +269,21 @@ export default {
 
     verifyIsTask(type) {  // 判断类型是不是task
       if (type.includes('Task')) {
+        return true;
+      }
+      return false;
+    },
+    verifyIsDataReference(type) {  // 判断类型是不是bpmn:DataObjectReference、bpmn:DataStoreReference
+      if (type === "bpmn:DataObjectReference" || type === "bpmn:DataStoreReference") {
+        this.read_expansion_data();
+        return true;
+      }
+      return false;
+    },
+    verifyIsSendOrReceiveTask(type) {
+      if (type == "bpmn:SendTask" || type == "bpmn:ReceiveTask") {
         this.read_expansion_data();  // 读取额外数据
         this.read_MessageRelation();  // 读取MessageRelation
-        return true;
-      }
-      return false;
-    },
-    verifyIsDataObjectReference(type) {  // 判断类型是不是bpmn:DataObjectReference
-      if (type === "bpmn:DataObjectReference") {
-        this.read_expansion_data();
-        return true;
-      }
-      return false;
-    },
-    verifyIsDataStoreReference(type) {  // 判断类型是不是bpmn:DataStoreReference
-      if (type === "bpmn:DataStoreReference") {
-        this.read_expansion_data();
         return true;
       }
       return false;
@@ -309,7 +294,6 @@ export default {
       for (let key in this.DataFields_dict) {  // 清空DataFields
         delete this.DataFields_dict[key];
       }
-
       let DataFields_backup_dict = this.element.businessObject.$attrs;  // 取出当前元素的附加属性
       for (let key in DataFields_backup_dict) {
         this.DataFields_dict[key] = DataFields_backup_dict[key];
@@ -336,8 +320,7 @@ export default {
       properties[key] = undefined;
       this.updateProperties(properties);  // 调用属性更新方法
 
-      // 如果是Task类型的数据还要更新一下MessageRelation
-      if (this.verifyIsTask(this.element.type)) {
+      if (this.verifyIsSendOrReceiveTask(this.element.type)) {
         this.synchronous_delete_mrfield_item(key);  // 同步更新下面的MessageRelation
       }
     },
@@ -349,8 +332,7 @@ export default {
       properties[key] = value;
       this.updateProperties(properties);  // 调用属性更新方法
 
-      // 如果是Task类型的数据还要更新一下MessageRelation
-      if (this.verifyIsTask(this.element.type)) {
+      if (this.verifyIsSendOrReceiveTask(this.element.type)) {
         this.synchronous_update_mrfield_item(key, value);  // 同步更新下面的MessageRelation
       }
     },
@@ -578,25 +560,37 @@ export default {
 
       // 先删除可能存在的 label 元素 和 EndCondition图标
       this.delete_InstanceNumber_label();
-      this.delete_EndConditionIcon();
+      // this.delete_EndConditionIcon();
 
-      // 检查多实例特性是否存在
-      if (!loopCharacteristics) {
-        // console.log('该元素没有多实例特性');
+      // 检查多实例特性是否存在、检查多实例特性的类型是否为 bpmn:MultiInstanceLoopCharacteristics
+      if (!loopCharacteristics || loopCharacteristics.$type !== 'bpmn:MultiInstanceLoopCharacteristics') {
+        // console.log('该元素没有多实例特性 || 该元素的多实例特性类型不正确');
         delete element.businessObject.InstanceNumber;
-        delete element.businessObject.EndCondition;
-        return false;
-      }
-
-      // 检查多实例特性的类型是否为 bpmn:MultiInstanceLoopCharacteristics
-      if (loopCharacteristics.$type !== 'bpmn:MultiInstanceLoopCharacteristics') {
-        // console.log('该元素的多实例特性类型不正确');
-        delete element.businessObject.InstanceNumber;
-        delete element.businessObject.EndCondition;
+        // delete element.businessObject.EndCondition;
         return false;
       }
 
       this.paint_InstanceNumber();
+      // this.paint_EndConditionIcon();
+      return true;
+    },
+
+    verifyIsMultiReceiveTask(element) {
+      const type = element.type;
+      // 获取多实例特性
+      const loopCharacteristics = element.businessObject.loopCharacteristics;
+
+      // 先删除可能存在的 EndCondition图标
+      this.delete_EndConditionIcon();
+
+      // 检查多实例特性是否存在、检查多实例特性的类型是否为 bpmn:MultiInstanceLoopCharacteristics
+      // 检查元素是否是bpmn:ReceiveTask
+      if (!loopCharacteristics || loopCharacteristics.$type !== 'bpmn:MultiInstanceLoopCharacteristics' || type !== 'bpmn:ReceiveTask') {
+        // console.log('该元素没有多实例特性 || 该元素的多实例特性类型不正确');
+        delete element.businessObject.EndCondition;
+        return false;
+      }
+
       this.paint_EndConditionIcon();
       return true;
     },
@@ -681,11 +675,11 @@ export default {
 
       let img = null;   // 要绘制的图像
       if (EndCondition === "Number") {
-        img = 'https://static.thenounproject.com/png/487908-200.png';
+        img = require('@/assets/Number.png');
       } else if (EndCondition === "Time") {
-        img = 'https://static.thenounproject.com/png/5334445-200.png';
-      } else {
-        img = 'https://static.thenounproject.com/png/3968257-200.png';
+        img = require('@/assets/Time.png');
+      } else if (EndCondition === "Race") {
+        img = require('@/assets/Race.png');
       }
 
       // 创建图像元素
@@ -775,17 +769,22 @@ export default {
       const { element } = this;
       return this.verifyIsTask(element.type)
     },
-    isDataObjectReference() {  // 判断当前点击的element是不是DataObjectReference
+    isDataReference() {  // 判断当前点击的element是不是DataObjectReference
       const { element } = this;
-      return this.verifyIsDataObjectReference(element.type)
+      return this.verifyIsDataReference(element.type)
     },
-    isDataStoreReference() {  // 判断当前点击的element是不是DataStoreReference
+    isSendOrReceiveTask() {  // 判断当前点击的element是不是"bpmn:SendTask"、"bpmn:ReceiveTask"
       const { element } = this;
-      return this.verifyIsDataStoreReference(element.type)
+      return this.verifyIsSendOrReceiveTask(element.type)
     },
+
     isMultiInstance() {  // 判断当前点击的元素有没有带有多实例标志
       const { element } = this;
       return this.verifyIsMultiInstance(element)
+    },
+    isMultiReceiveTask() {
+      const { element } = this;
+      return this.verifyIsMultiReceiveTask(element)
     }
   }
 }

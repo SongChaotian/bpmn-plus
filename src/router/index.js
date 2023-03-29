@@ -4,12 +4,12 @@ Vue.use(Router)
 
 const routes = [{
     path: '/',
-    redirect: '/custom-properties-panel'
+    redirect: '/bpmn-plus'
 },
 {
-    path: '/custom-properties-panel',
+    path: '/bpmn-plus',
     component: () =>
-        import('./../components/custom-properties-panel')
+        import('./../components/bpmn-plus')
 }]
 
 export default new Router({
