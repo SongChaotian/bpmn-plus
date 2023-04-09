@@ -1,8 +1,6 @@
 <template>
   <div class="containers" ref="content">
-
     <div class="canvas" id="drop_zone" ref="canvas" tabindex="0"></div>
-
     <properties-view v-if="bpmnModeler" :modeler="bpmnModeler"></properties-view>
     <ul class="buttons">
       <li>
@@ -102,7 +100,7 @@ export default {
 
     success() {
       // 给图绑定事件，当图有发生改变就会触发这个事件
-      this.addBpmnListener();     // 保存图片、bpmn文件用
+      this.addBpmnListener();     // 监听画布
       this.addEventBusListener();  // 监听element并绑定事件
       this.uploadXML();  // 导入XML文件
       this.addbtn2createNewBpmnDiagram();  // 创建新的BPMN Diagram
@@ -216,7 +214,7 @@ export default {
       const bpmnFactory = this.bpmnModeler.get('bpmnFactory');
       const create = this.bpmnModeler.get('create');
 
-      // console.log(this.pressed_keys);
+      // console.log(this.pressed_keys);  // 输出当前按的键位
       if (this.pressed_keys.has('Control')) {
         e.preventDefault();  // 如果按了Ctrl就禁用浏览器的默认快捷键行为
         if (this.pressed_keys.has('Shift')) {
@@ -301,14 +299,14 @@ export default {
           this.deletePressed_keys(['v', 'V']);
           return;
         }
-      } else if (this.pressed_keys.has('Delete')) {
+      } else if (this.pressed_keys.has('Delete') || this.pressed_keys.has('Backspace')) {
         if (this.selectedElements.length == 0) {
-          this.deletePressed_keys(['Delete']);
+          this.deletePressed_keys(['Delete', 'Backspace']);
           return;
         }
         let deleteElementList = [...this.selectedElements];  // 把所有选中的元素加入待删除的List中
         modeling.removeElements(deleteElementList);
-        this.deletePressed_keys(['Delete']);
+        this.deletePressed_keys(['Delete', 'Backspace']);
         return;
       }
     },

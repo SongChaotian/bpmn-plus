@@ -23,7 +23,7 @@ const customConfig = { // 自定义元素的配置
             'url': require('@/assets/PrivacyTask.png'),
         },
         'IntelligentTask': {
-            'url': require('@/assets/IntelligentTask.jpg'),
+            'url': require('@/assets/IntelligentTask.png'),
         },
         'TransportTask': {
             'url': require('@/assets/TransportTask.png'),
