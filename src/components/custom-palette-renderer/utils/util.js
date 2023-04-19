@@ -5,34 +5,34 @@ const customElements = [  // 自定义元素的类型
 const customConfig = { // 自定义元素的配置
     'bpmn:Task': {
         'ImageTask': {
-            'url': require('@/assets/ImageTask.png'),
+            'url': 'https://s1.ax1x.com/2023/04/19/p9FnUJJ.png',
         },
         'IndustrialRobotsTask': {
-            'url': require('@/assets/IndustrialRobotsTask.png'),
+            'url': 'https://s1.ax1x.com/2023/04/19/p9FnYoF.png',
         },
         'SensorTask': {
-            'url': require('@/assets/SensorTask.png'),
+            'url': 'https://s1.ax1x.com/2023/04/19/p9Fn0Q1.png',
         },
         'AudioTask': {
-            'url': require('@/assets/AudioTask.png'),
+            'url': 'https://s1.ax1x.com/2023/04/19/p9FnksP.png',
         },
         'CollectTask': {
-            'url': require('@/assets/CollectTask.png'),
+            'url': 'https://s1.ax1x.com/2023/04/19/p9FnlMq.png',
         },
         'PrivacyTask': {
-            'url': require('@/assets/PrivacyTask.png'),
+            'url': 'https://s1.ax1x.com/2023/04/19/p9FndzR.png',
         },
         'IntelligentTask': {
-            'url': require('@/assets/IntelligentTask.png'),
+            'url': 'https://s1.ax1x.com/2023/04/19/p9FnJdU.png',
         },
         'TransportTask': {
-            'url': require('@/assets/TransportTask.png'),
+            'url': 'https://s1.ax1x.com/2023/04/19/p9FnBsx.png',
         },
         'DeliveryTask': {
-            'url': require('@/assets/DeliveryTask.svg'),
+            'url': 'https://s1.ax1x.com/2023/04/19/p9FnNi4.png',
         },
         'DataGateWay': {
-            'url': require('@/assets/DataGateWay.svg'),
+            'url': 'https://s1.ax1x.com/2023/04/19/p9FnaW9.png',
         },
         'attr': { x: 0, y: 0, width: 48, height: 48 }
     },

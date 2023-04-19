@@ -1,11 +1,6 @@
 <template>
   <div id="app">
     <div class="content">
-      <!-- <ul class="router_ul">
-        <router-link v-for="link in links" :key="link.to" tag="li" active-class="activeClass" :to="link.to">
-          {{ link.title }}
-        </router-link>
-      </ul> -->
       <router-view></router-view>
     </div>
   </div>
@@ -19,12 +14,7 @@ export default {
   name: 'app',
   components: {},
   data() {
-    return {
-      links: [
-        { to: '/basic', title: '基本使用' },
-        { to: '/custom-properties-panel', title: 'author：宋超田' }
-      ]
-    }
+    return {}
   }
 }
 </script>

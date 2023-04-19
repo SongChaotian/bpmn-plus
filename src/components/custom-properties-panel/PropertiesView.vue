@@ -675,11 +675,11 @@ export default {
 
       let img = null;   // 要绘制的图像
       if (EndCondition === "Number") {
-        img = require('@/assets/Number.png');
+        img = 'https://s1.ax1x.com/2023/04/19/p9FKt29.png';
       } else if (EndCondition === "Time") {
-        img = require('@/assets/Time.png');
+        img = 'https://s1.ax1x.com/2023/04/19/p9FKJC4.png';
       } else if (EndCondition === "Race") {
-        img = require('@/assets/Race.png');
+        img = 'https://s1.ax1x.com/2023/04/19/p9FKY8J.png';
       }
 
       // 创建图像元素
