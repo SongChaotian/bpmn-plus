@@ -14,7 +14,8 @@
 <img src="https://img.shields.io/badge/Vue-2.7.14-critical" alt="" />
 </p>
 
-
+### My Page View
+![Visitor Count](https://profile-counter.glitch.me/SongChaotian/count.svg)
 
 
 This project is abut BPMN properties extension , and based on BPMN.js and Vue implementation. The project has been deployed on a cloud server. [Click here to access it.](http://124.71.159.213:10086/bpmn-plus)Specific initialization is shown as follow:
